@@ -1,0 +1,172 @@
+{% extends "common/base.html" %}
+
+{% block title %}Admin Dashboard - Healsync HMS{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="bg-white shadow-sm rounded-lg p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                <p class="text-gray-600">Welcome back, {{ current_user.get_full_name() }}</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <i data-lucide="shield" class="w-8 h-8 text-blue-600"></i>
+                <span class="text-lg font-semibold text-blue-600">Administrator</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Doctors -->
+        <div class="bg-white rounded-lg shadow-sm p-6 card-hover">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="user-md" class="w-5 h-5 text-blue-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total Doctors</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_doctors }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Patients -->
+        <div class="bg-white rounded-lg shadow-sm p-6 card-hover">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="users" class="w-5 h-5 text-green-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total Patients</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_patients }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Appointments -->
+        <div class="bg-white rounded-lg shadow-sm p-6 card-hover">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="calendar" class="w-5 h-5 text-purple-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total Appointments</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_appointments }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Appointments -->
+        <div class="bg-white rounded-lg shadow-sm p-6 card-hover">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="clock" class="w-5 h-5 text-orange-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Today's Appointments</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ today_appointments }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities and Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Activities -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900">Recent Activities</h2>
+                <a href="{{ url_for('admin.view_logs') }}" class="text-sm text-blue-600 hover:text-blue-500">View All</a>
+            </div>
+            
+            <div class="space-y-4">
+                {% if recent_logs %}
+                    {% for log in recent_logs %}
+                    <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i data-lucide="activity" class="w-4 h-4 text-blue-600"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900">{{ log.action.replace('_', ' ').title() }}</p>
+                            <p class="text-sm text-gray-500">{{ log.details }}</p>
+                            <p class="text-xs text-gray-400">{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-8">
+                        <i data-lucide="file-text" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                        <p class="text-gray-500">No recent activities</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <a href="{{ url_for('admin.manage_doctors') }}" 
+                   class="flex flex-col items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                    <i data-lucide="user-md" class="w-8 h-8 text-blue-600 mb-2"></i>
+                    <span class="text-sm font-medium text-blue-900">Manage Doctors</span>
+                </a>
+                
+                <a href="{{ url_for('admin.manage_patients') }}" 
+                   class="flex flex-col items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                    <i data-lucide="users" class="w-8 h-8 text-green-600 mb-2"></i>
+                    <span class="text-sm font-medium text-green-900">Manage Patients</span>
+                </a>
+                
+                <a href="{{ url_for('admin.appointments') }}" 
+                   class="flex flex-col items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                    <i data-lucide="calendar" class="w-8 h-8 text-purple-600 mb-2"></i>
+                    <span class="text-sm font-medium text-purple-900">View Appointments</span>
+                </a>
+                
+                <a href="{{ url_for('admin.view_logs') }}" 
+                   class="flex flex-col items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+                    <i data-lucide="file-text" class="w-8 h-8 text-orange-600 mb-2"></i>
+                    <span class="text-sm font-medium text-orange-900">System Logs</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Appointment Trends -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Monthly Appointment Trends</h2>
+        
+        {% if monthly_appointments %}
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {% for month_data in monthly_appointments %}
+            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                <p class="text-sm font-medium text-gray-900">{{ month_data.month }}</p>
+                <p class="text-2xl font-bold text-blue-600">{{ month_data.count }}</p>
+                <p class="text-xs text-gray-500">appointments</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <i data-lucide="bar-chart" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+            <p class="text-gray-500">No appointment data available</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

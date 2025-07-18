@@ -1,0 +1,483 @@
+{% extends "common/base.html" %}
+
+{% block title %}System Logs - Healsync HMS{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="bg-white shadow-sm rounded-lg p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">System Logs</h1>
+                <p class="text-gray-600">Monitor system activity and user actions</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <i data-lucide="file-text" class="w-8 h-8 text-blue-600"></i>
+                <span class="text-lg font-semibold text-blue-600">Admin</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white shadow-sm rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="activity" class="w-6 h-6 text-blue-600"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total Logs</p>
+                    <p class="text-2xl font-semibold text-gray-900" id="totalLogs">0</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white shadow-sm rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="user-check" class="w-6 h-6 text-green-600"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Active Users</p>
+                    <p class="text-2xl font-semibold text-gray-900" id="activeUsers">0</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white shadow-sm rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 text-yellow-600"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Warnings</p>
+                    <p class="text-2xl font-semibold text-gray-900" id="warnings">0</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white shadow-sm rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="alert-circle" class="w-6 h-6 text-red-600"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Errors</p>
+                    <p class="text-2xl font-semibold text-gray-900" id="errors">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter and Search -->
+    <div class="bg-white shadow-sm rounded-lg p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            <div class="flex items-center space-x-4">
+                <div>
+                    <label for="levelFilter" class="block text-sm font-medium text-gray-700">Log Level</label>
+                    <select id="levelFilter" onchange="filterLogs()" 
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Levels</option>
+                        <option value="INFO">Info</option>
+                        <option value="WARNING">Warning</option>
+                        <option value="ERROR">Error</option>
+                        <option value="CRITICAL">Critical</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="userFilter" class="block text-sm font-medium text-gray-700">User</label>
+                    <select id="userFilter" onchange="filterLogs()" 
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Users</option>
+                        <!-- User options will be populated -->
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="dateFilter" class="block text-sm font-medium text-gray-700">Date Range</label>
+                    <div class="flex space-x-2">
+                        <input type="date" id="startDate" onchange="filterLogs()" 
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <span class="mt-2">to</span>
+                        <input type="date" id="endDate" onchange="filterLogs()" 
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <button onclick="refreshLogs()" class="text-blue-600 hover:text-blue-500">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                </button>
+                <button onclick="exportLogs()" 
+                        class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                    Export
+                </button>
+                <button onclick="clearLogs()" 
+                        class="inline-flex items-center px-3 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i>
+                    Clear Logs
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">System Activity Logs</h2>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="logsTableBody">
+                    <!-- Logs will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div class="flex-1 flex justify-between sm:hidden">
+                <button onclick="previousPage()" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Previous
+                </button>
+                <button onclick="nextPage()" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Next
+                </button>
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing <span id="startIndex">1</span> to <span id="endIndex">10</span> of <span id="totalCount">0</span> results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                        <button onclick="previousPage()" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                        </button>
+                        <span id="pageNumbers" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                            Page 1
+                        </span>
+                        <button onclick="nextPage()" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log Details Modal -->
+<div id="logModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Log Details</h3>
+                <button onclick="closeLogModal()" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div id="logDetails" class="space-y-4">
+                <!-- Details will be populated here -->
+            </div>
+            
+            <div class="flex justify-end pt-4">
+                <button onclick="closeLogModal()" 
+                        class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+let totalPages = 1;
+let allLogs = [];
+let filteredLogs = [];
+
+function loadLogs() {
+    fetch('/admin/api/logs')
+        .then(response => response.json())
+        .then(data => {
+            allLogs = data.logs || [];
+            filteredLogs = [...allLogs];
+            updateStatistics(data.statistics || {});
+            populateUserFilter(data.users || []);
+            displayLogs();
+        })
+        .catch(error => {
+            console.error('Error loading logs:', error);
+            document.getElementById('logsTableBody').innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-12 text-center">
+                        <i data-lucide="alert-circle" class="w-12 h-12 text-red-400 mx-auto mb-4"></i>
+                        <p class="text-red-500">Error loading logs</p>
+                    </td>
+                </tr>
+            `;
+        });
+}
+
+function updateStatistics(stats) {
+    document.getElementById('totalLogs').textContent = stats.total || 0;
+    document.getElementById('activeUsers').textContent = stats.active_users || 0;
+    document.getElementById('warnings').textContent = stats.warnings || 0;
+    document.getElementById('errors').textContent = stats.errors || 0;
+}
+
+function populateUserFilter(users) {
+    const userFilter = document.getElementById('userFilter');
+    users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.username;
+        option.textContent = user.username;
+        userFilter.appendChild(option);
+    });
+}
+
+function displayLogs() {
+    const itemsPerPage = 20;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageLogs = filteredLogs.slice(startIndex, endIndex);
+    
+    totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+    
+    // Update pagination info
+    document.getElementById('startIndex').textContent = startIndex + 1;
+    document.getElementById('endIndex').textContent = Math.min(endIndex, filteredLogs.length);
+    document.getElementById('totalCount').textContent = filteredLogs.length;
+    document.getElementById('pageNumbers').textContent = `Page ${currentPage} of ${totalPages}`;
+    
+    const tbody = document.getElementById('logsTableBody');
+    
+    if (pageLogs.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-12 text-center">
+                    <i data-lucide="file-text" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                    <p class="text-gray-500">No logs found</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = pageLogs.map(log => `
+        <tr class="hover:bg-gray-50 cursor-pointer" onclick="viewLogDetails(${log.id})">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                ${new Date(log.timestamp).toLocaleString()}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                    ${log.level === 'ERROR' ? 'bg-red-100 text-red-800' : 
+                      log.level === 'WARNING' ? 'bg-yellow-100 text-yellow-800' : 
+                      log.level === 'CRITICAL' ? 'bg-red-100 text-red-800' : 
+                      'bg-green-100 text-green-800'}">
+                    ${log.level}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                ${log.username || 'System'}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                ${log.action}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                ${log.details || 'No details'}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${log.ip_address || 'N/A'}
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filterLogs() {
+    const levelFilter = document.getElementById('levelFilter').value;
+    const userFilter = document.getElementById('userFilter').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    filteredLogs = allLogs.filter(log => {
+        let matches = true;
+        
+        if (levelFilter && log.level !== levelFilter) {
+            matches = false;
+        }
+        
+        if (userFilter && log.username !== userFilter) {
+            matches = false;
+        }
+        
+        if (startDate) {
+            const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+            if (logDate < startDate) {
+                matches = false;
+            }
+        }
+        
+        if (endDate) {
+            const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+            if (logDate > endDate) {
+                matches = false;
+            }
+        }
+        
+        return matches;
+    });
+    
+    currentPage = 1;
+    displayLogs();
+}
+
+function refreshLogs() {
+    loadLogs();
+}
+
+function exportLogs() {
+    if (filteredLogs.length === 0) {
+        alert('No logs to export');
+        return;
+    }
+    
+    let csv = 'Timestamp,Level,User,Action,Details,IP Address\n';
+    filteredLogs.forEach(log => {
+        csv += `"${new Date(log.timestamp).toLocaleString()}","${log.level}","${log.username || 'System'}","${log.action}","${log.details || ''}","${log.ip_address || ''}"\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `system_logs_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+function clearLogs() {
+    if (confirm('Are you sure you want to clear all logs? This action cannot be undone.')) {
+        fetch('/admin/api/logs', {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert('Logs cleared successfully!');
+                loadLogs();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to clear logs'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error clearing logs');
+        });
+    }
+}
+
+function viewLogDetails(logId) {
+    const log = allLogs.find(l => l.id === logId);
+    if (!log) return;
+    
+    const detailsDiv = document.getElementById('logDetails');
+    detailsDiv.innerHTML = `
+        <div class="space-y-4">
+            <div>
+                <h4 class="text-sm font-medium text-gray-700">Timestamp</h4>
+                <p class="text-sm text-gray-900">${new Date(log.timestamp).toLocaleString()}</p>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-medium text-gray-700">Level</h4>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                    ${log.level === 'ERROR' ? 'bg-red-100 text-red-800' : 
+                      log.level === 'WARNING' ? 'bg-yellow-100 text-yellow-800' : 
+                      log.level === 'CRITICAL' ? 'bg-red-100 text-red-800' : 
+                      'bg-green-100 text-green-800'}">
+                    ${log.level}
+                </span>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-medium text-gray-700">User</h4>
+                <p class="text-sm text-gray-900">${log.username || 'System'}</p>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-medium text-gray-700">Action</h4>
+                <p class="text-sm text-gray-900">${log.action}</p>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-medium text-gray-700">Details</h4>
+                <p class="text-sm text-gray-900">${log.details || 'No details provided'}</p>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-medium text-gray-700">IP Address</h4>
+                <p class="text-sm text-gray-900">${log.ip_address || 'N/A'}</p>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('logModal').classList.remove('hidden');
+}
+
+function closeLogModal() {
+    document.getElementById('logModal').classList.add('hidden');
+}
+
+function previousPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        displayLogs();
+    }
+}
+
+function nextPage() {
+    if (currentPage < totalPages) {
+        currentPage++;
+        displayLogs();
+    }
+}
+
+// Close modal when clicking outside
+document.getElementById('logModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeLogModal();
+    }
+});
+
+// Load logs when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadLogs();
+    
+    // Set default date range to last 7 days
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    
+    document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+    document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+});
+</script>
+{% endblock %} 

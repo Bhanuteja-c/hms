@@ -1,0 +1,187 @@
+{% extends "common/base.html" %}
+
+{% block title %}Doctor Dashboard - Healsync HMS{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="bg-white shadow-sm rounded-lg p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Doctor Dashboard</h1>
+                <p class="text-gray-600">Welcome back, Dr. {{ current_user.get_full_name() }}</p>
+                {% if current_user.specialization %}
+                <p class="text-sm text-blue-600">{{ current_user.specialization }}</p>
+                {% endif %}
+            </div>
+            <div class="flex items-center space-x-2">
+                <i data-lucide="user-md" class="w-8 h-8 text-blue-600"></i>
+                <span class="text-lg font-semibold text-blue-600">Doctor</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Total Appointments -->
+        <div class="bg-white rounded-lg shadow-sm p-6 card-hover">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total Appointments</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_appointments }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Appointments -->
+        <div class="bg-white rounded-lg shadow-sm p-6 card-hover">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="clock" class="w-5 h-5 text-green-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Today's Appointments</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ today_appointments }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Patients -->
+        <div class="bg-white rounded-lg shadow-sm p-6 card-hover">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="users" class="w-5 h-5 text-purple-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">My Patients</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ recent_patients|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Appointments and Recent Patients -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Upcoming Appointments -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900">Upcoming Appointments</h2>
+                <a href="{{ url_for('doctor.appointments') }}" class="text-sm text-blue-600 hover:text-blue-500">View All</a>
+            </div>
+            
+            <div class="space-y-4">
+                {% if upcoming_appointments %}
+                    {% for appointment in upcoming_appointments %}
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i data-lucide="user" class="w-5 h-5 text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{{ appointment.patient.get_full_name() }}</p>
+                                <p class="text-xs text-gray-500">{{ appointment.appointment_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {{ appointment.status.title() }}
+                            </span>
+                            <a href="{{ url_for('doctor.diagnose', appointment_id=appointment.id) }}" 
+                               class="text-blue-600 hover:text-blue-500">
+                                <i data-lucide="stethoscope" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-8">
+                        <i data-lucide="calendar" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                        <p class="text-gray-500">No upcoming appointments</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Patients -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900">Recent Patients</h2>
+                <a href="{{ url_for('doctor.view_patients') }}" class="text-sm text-blue-600 hover:text-blue-500">View All</a>
+            </div>
+            
+            <div class="space-y-4">
+                {% if recent_patients %}
+                    {% for patient in recent_patients %}
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <i data-lucide="user" class="w-5 h-5 text-green-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{{ patient.get_full_name() }}</p>
+                                <p class="text-xs text-gray-500">{{ patient.email }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            {% if patient.blood_group %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                {{ patient.blood_group }}
+                            </span>
+                            {% endif %}
+                            <a href="{{ url_for('doctor.view_patients') }}" class="text-blue-600 hover:text-blue-500">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-8">
+                        <i data-lucide="users" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                        <p class="text-gray-500">No patients yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a href="{{ url_for('doctor.appointments') }}" 
+               class="flex flex-col items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                <i data-lucide="calendar" class="w-8 h-8 text-blue-600 mb-2"></i>
+                <span class="text-sm font-medium text-blue-900">View Appointments</span>
+            </a>
+            
+            <a href="{{ url_for('doctor.view_patients') }}" 
+               class="flex flex-col items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                <i data-lucide="users" class="w-8 h-8 text-green-600 mb-2"></i>
+                <span class="text-sm font-medium text-green-900">My Patients</span>
+            </a>
+            
+            <a href="{{ url_for('doctor.prediction_form') }}" 
+               class="flex flex-col items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                <i data-lucide="activity" class="w-8 h-8 text-purple-600 mb-2"></i>
+                <span class="text-sm font-medium text-purple-900">Disease Prediction</span>
+            </a>
+            
+            <a href="{{ url_for('doctor.profile') }}" 
+               class="flex flex-col items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+                <i data-lucide="user" class="w-8 h-8 text-orange-600 mb-2"></i>
+                <span class="text-sm font-medium text-orange-900">My Profile</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

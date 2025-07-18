@@ -1,0 +1,267 @@
+{% extends "common/base.html" %}
+
+{% block title %}Book Appointment - Healsync HMS{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="bg-white shadow-sm rounded-lg p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Book Appointment</h1>
+                <p class="text-gray-600">Schedule an appointment with a doctor</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <i data-lucide="calendar-plus" class="w-8 h-8 text-blue-600"></i>
+                <span class="text-lg font-semibold text-blue-600">Patient</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Booking Form -->
+    <div class="bg-white shadow-sm rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-6">Schedule New Appointment</h2>
+        
+        <form id="appointmentForm" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="doctor" class="block text-sm font-medium text-gray-700">Select Doctor</label>
+                    <select id="doctor" name="doctor_id" required 
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Choose a doctor</option>
+                        {% for doctor in doctors %}
+                        <option value="{{ doctor.id }}">
+                            Dr. {{ doctor.get_full_name() }} - {{ doctor.specialization or 'General Medicine' }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="appointment_date" class="block text-sm font-medium text-gray-700">Appointment Date & Time</label>
+                    <input type="datetime-local" id="appointment_date" name="appointment_date" required 
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                           min="{{ (now + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M') }}">
+                </div>
+            </div>
+            
+            <div>
+                <label for="reason" class="block text-sm font-medium text-gray-700">Reason for Visit</label>
+                <textarea id="reason" name="reason" rows="4" required 
+                          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Please describe your symptoms or reason for the appointment..."></textarea>
+            </div>
+            
+            <div class="flex justify-end space-x-4">
+                <button type="button" onclick="resetForm()" 
+                        class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Reset
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Book Appointment
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Available Doctors -->
+    <div class="bg-white shadow-sm rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-6">Available Doctors</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% if doctors %}
+                {% for doctor in doctors %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i data-lucide="user-md" class="w-6 h-6 text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-900">Dr. {{ doctor.get_full_name() }}</h3>
+                            <p class="text-xs text-gray-500">{{ doctor.specialization or 'General Medicine' }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 text-sm text-gray-600">
+                        {% if doctor.phone %}
+                        <div class="flex items-center">
+                            <i data-lucide="phone" class="w-4 h-4 mr-2"></i>
+                            <span>{{ doctor.phone }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="flex items-center">
+                            <i data-lucide="mail" class="w-4 h-4 mr-2"></i>
+                            <span>{{ doctor.email }}</span>
+                        </div>
+                        
+                        {% if doctor.license_number %}
+                        <div class="flex items-center">
+                            <i data-lucide="id-card" class="w-4 h-4 mr-2"></i>
+                            <span>License: {{ doctor.license_number }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <button onclick="selectDoctor({{ doctor.id }}, '{{ doctor.get_full_name() }}')" 
+                            class="mt-3 w-full px-3 py-2 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Select This Doctor
+                    </button>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-span-full text-center py-8">
+                    <i data-lucide="user-md" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                    <p class="text-gray-500">No doctors available at the moment</p>
+                    <p class="text-sm text-gray-400">Please check back later or contact the administration</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- My Appointments -->
+    <div class="bg-white shadow-sm rounded-lg p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-semibold text-gray-900">My Appointments</h2>
+            <button onclick="refreshAppointments()" class="text-blue-600 hover:text-blue-500">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            </button>
+        </div>
+        
+        <div id="appointmentsList" class="space-y-4">
+            <!-- Appointments will be loaded here via JavaScript -->
+        </div>
+    </div>
+</div>
+
+<script>
+function selectDoctor(doctorId, doctorName) {
+    document.getElementById('doctor').value = doctorId;
+    document.getElementById('doctor').focus();
+    
+    // Show a brief notification
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
+    notification.innerHTML = `Selected Dr. ${doctorName}`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 2000);
+}
+
+function resetForm() {
+    document.getElementById('appointmentForm').reset();
+}
+
+function refreshAppointments() {
+    loadAppointments();
+}
+
+function loadAppointments() {
+    fetch('/patient/api/appointments')
+        .then(response => response.json())
+        .then(appointments => {
+            const container = document.getElementById('appointmentsList');
+            
+            if (appointments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i data-lucide="calendar" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                        <p class="text-gray-500">No appointments found</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = appointments.map(appointment => `
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i data-lucide="user-md" class="w-5 h-5 text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-900">Dr. ${appointment.doctor_name}</h3>
+                                <p class="text-xs text-gray-500">${appointment.doctor_specialization || 'General Medicine'}</p>
+                                <p class="text-xs text-gray-500">${new Date(appointment.appointment_date).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                ${appointment.status === 'scheduled' ? 'bg-blue-100 text-blue-800' : 
+                                  appointment.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                  'bg-red-100 text-red-800'}">
+                                ${appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                            </span>
+                        </div>
+                    </div>
+                    ${appointment.reason ? `<p class="mt-2 text-sm text-gray-600">${appointment.reason}</p>` : ''}
+                </div>
+            `).join('');
+        })
+        .catch(error => {
+            console.error('Error loading appointments:', error);
+            document.getElementById('appointmentsList').innerHTML = `
+                <div class="text-center py-8">
+                    <i data-lucide="alert-circle" class="w-12 h-12 text-red-400 mx-auto mb-4"></i>
+                    <p class="text-red-500">Error loading appointments</p>
+                </div>
+            `;
+        });
+}
+
+document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {};
+    
+    for (let [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+    
+    // Validate appointment date is in the future
+    const appointmentDate = new Date(data.appointment_date);
+    const now = new Date();
+    
+    if (appointmentDate <= now) {
+        alert('Appointment date must be in the future');
+        return;
+    }
+    
+    fetch('/patient/book-appointment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            alert('Appointment booked successfully!');
+            resetForm();
+            loadAppointments();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to book appointment'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error booking appointment');
+    });
+});
+
+// Load appointments when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadAppointments();
+    
+    // Set minimum date to current date + 1 hour
+    const now = new Date();
+    now.setHours(now.getHours() + 1);
+    document.getElementById('appointment_date').min = now.toISOString().slice(0, 16);
+});
+</script>
+{% endblock %} 

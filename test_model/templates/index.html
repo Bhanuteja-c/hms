@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Disease Risk Predictor</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom JS -->
+  <script src="/static/script.js" defer></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-white text-gray-900 min-h-screen flex items-center justify-center">
+
+  <div class="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-xl border border-blue-200">
+    <h2 class="text-3xl font-bold mb-6 text-center text-blue-700">Disease Risk Prediction</h2>
+
+    <form id="riskForm" class="space-y-5">
+      <div>
+        <label class="block mb-1 font-semibold">Age</label>
+        <input type="number" id="age" class="w-full p-3 border rounded-md" required />
+      </div>
+      <div>
+        <label class="block mb-1 font-semibold">Gender (1 = Male, 0 = Female)</label>
+        <input type="number" id="gender" class="w-full p-3 border rounded-md" required />
+      </div>
+      <div>
+        <label class="block mb-1 font-semibold">Have High Blood Pressure?</label>
+        <select id="has_high_bp" class="w-full p-3 border rounded-md">
+          <option value="0">No</option>
+          <option value="1">Yes</option>
+        </select>
+        <p class="text-sm text-gray-500 mt-1">We'll use default BP values if unknown.</p>
+      </div>
+      <div>
+        <label class="block mb-1 font-semibold">Cholesterol</label>
+        <input type="number" id="cholesterol" class="w-full p-3 border rounded-md" />
+      </div>
+      <div>
+        <label class="block mb-1 font-semibold">Glucose</label>
+        <input type="number" id="glucose" class="w-full p-3 border rounded-md" />
+      </div>
+      <div>
+        <label class="block mb-1 font-semibold">BMI</label>
+        <input type="number" id="bmi" class="w-full p-3 border rounded-md" />
+      </div>
+      <div>
+        <label class="block mb-1 font-semibold">Heart Rate</label>
+        <input type="number" id="heart_rate" class="w-full p-3 border rounded-md" />
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">Predict</button>
+    </form>
+
+    <!-- Spinner -->
+    <div id="loadingSpinner" class="hidden mt-6 flex justify-center">
+      <div class="w-12 h-12 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+    </div>
+  </div>
+
+  <!-- Result Modal -->
+  <div id="resultModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-md text-center">
+      <h3 class="text-xl font-bold mb-4 text-blue-700">Prediction Result</h3>
+      <div id="modalContent" class="text-gray-800 text-md space-y-3">
+        <!-- Injected by JS -->
+      </div>
+      <button onclick="closeModal()" class="mt-6 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <!-- Activate Lucide Icons -->
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
