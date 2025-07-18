@@ -1,0 +1,12 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-WTF
+Flask-CORS
+PyJWT
+Werkzeug
+python-dotenv
+mysqlclient
+scikit-learn
+pandas
+numpy 
