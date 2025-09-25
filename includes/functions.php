@@ -5,7 +5,21 @@
  * Sanitize output (XSS safe)
  */
 function e($str) {
-    return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
+    return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * CSRF Token Helpers
+ */
+function csrf() {
+    if (!isset($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function verify_csrf($token) {
+    return hash_equals($_SESSION['csrf_token'] ?? '', $token ?? '');
 }
 
 /**
@@ -81,7 +95,6 @@ function consume_password_reset(PDO $pdo, int $id) {
 
 /**
  * Utility: send simulated email (for dev)
- * Logs to PHP error log (swap with PHPMailer in production)
  */
 function send_simulated_email($to, $subject, $body) {
     error_log("Simulated email to: {$to}\nSubject: {$subject}\n\n{$body}\n");

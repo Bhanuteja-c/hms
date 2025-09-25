@@ -9,98 +9,134 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf($_POST['csrf'] ?? '')) {
         $errors[] = "Invalid CSRF token.";
     } else {
-        $name = trim($_POST['name'] ?? '');
-        $email = filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);
+        $name     = trim($_POST['name'] ?? '');
+        $email    = filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);
         $password = $_POST['password'] ?? '';
-        $phone = trim($_POST['phone'] ?? '');
-        $address = trim($_POST['address'] ?? '');
-        $dob = $_POST['dob'] ?? null;
-        $gender = $_POST['gender'] ?? 'other';
+        $phone    = trim($_POST['phone'] ?? '');
+        $address  = trim($_POST['address'] ?? '');
+        $dob      = $_POST['dob'] ?? null;
+        $gender   = $_POST['gender'] ?? 'other';
 
         if (!$name) $errors[] = "Name required.";
         if (!$email) $errors[] = "Valid email required.";
-        if (strlen($password) < 6) $errors[] = "Password must be at least 6 chars.";
+        if (strlen($password) < 6) $errors[] = "Password must be at least 6 characters.";
         if ($phone && !valid_phone($phone)) $errors[] = "Invalid phone.";
 
-        // ensure unique email
+        // Ensure unique email
         $stmt = $pdo->prepare("SELECT id FROM users WHERE email=:email");
-        $stmt->execute([':email'=>$email]);
+        $stmt->execute([':email' => $email]);
         if ($stmt->fetch()) $errors[] = "Email already in use.";
 
         if (empty($errors)) {
             $hash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (role,name,email,password,phone,address,dob,gender) VALUES ('patient',:name,:email,:pw,:phone,:address,:dob,:gender)");
+            $stmt = $pdo->prepare("
+                INSERT INTO users (role, name, email, password, phone, address, dob, gender) 
+                VALUES ('patient', :name, :email, :pw, :phone, :address, :dob, :gender)
+            ");
             $stmt->execute([
-                ':name'=>$name,':email'=>$email,':pw'=>$hash,':phone'=>$phone,':address'=>$address,':dob'=>$dob,':gender'=>$gender
+                ':name'    => $name,
+                ':email'   => $email,
+                ':pw'      => $hash,
+                ':phone'   => $phone,
+                ':address' => $address,
+                ':dob'     => $dob,
+                ':gender'  => $gender
             ]);
             $uid = $pdo->lastInsertId();
-            // create patient record
-            $pdo->prepare("INSERT INTO patients (id, medical_history) VALUES (:id,'')")->execute([':id'=>$uid]);
-            audit_log($pdo, $uid, 'patient_registered', json_encode(['email'=>$email]));
-            echo "<script>location.href='login.php';</script>";
+
+            // Create patient record
+            $pdo->prepare("INSERT INTO patients (id, medical_history) VALUES (:id,'')")
+                ->execute([':id' => $uid]);
+
+            audit_log($pdo, $uid, 'patient_registered', json_encode(['email' => $email]));
+            header("Location: login.php");
             exit;
         }
     }
 }
-
 ?>
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Register - Patient - Healsync</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50">
-  <div class="min-h-screen flex items-center justify-center">
-    <div class="max-w-lg w-full bg-white p-6 rounded shadow">
-      <h2 class="text-2xl font-bold mb-4">Patient Registration</h2>
+<body class="bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+  <div class="min-h-screen flex items-center justify-center px-4">
+    <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl p-8">
+      
+      <!-- Heading -->
+      <div class="text-center mb-6">
+        <img src="/healsync/assets/img/logo.png" class="h-12 w-12 mx-auto mb-3" alt="Healsync"/>
+        <h2 class="text-2xl font-bold text-gray-900">Create a Patient Account</h2>
+        <p class="text-gray-500 text-sm">Join Healsync to manage appointments and records</p>
+      </div>
+
+      <!-- Errors -->
       <?php if (!empty($errors)): ?>
-        <div class="bg-red-100 text-red-800 p-3 rounded mb-4">
-          <?php foreach($errors as $e) echo '<div>'.e($e).'</div>'; ?>
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm">
+          <?php foreach($errors as $e): ?>
+            <p>• <?= e($e) ?></p>
+          <?php endforeach; ?>
         </div>
       <?php endif; ?>
-      <form method="post">
-        <input type="hidden" name="csrf" value="<?=csrf()?>">
-        <label class="block mb-2">
-          <span class="text-sm">Full name</span>
-          <input name="name" required class="mt-1 block w-full border rounded p-2" />
-        </label>
-        <label class="block mb-2">
-          <span class="text-sm">Email</span>
-          <input name="email" type="email" required class="mt-1 block w-full border rounded p-2" />
-        </label>
-        <label class="block mb-2">
-          <span class="text-sm">Password</span>
-          <input name="password" type="password" required class="mt-1 block w-full border rounded p-2" />
-        </label>
-        <div class="grid grid-cols-2 gap-3">
-          <label class="block mb-2">
-            <span class="text-sm">Phone</span>
-            <input name="phone" class="mt-1 block w-full border rounded p-2" />
-          </label>
-          <label class="block mb-2">
-            <span class="text-sm">DOB</span>
-            <input name="dob" type="date" class="mt-1 block w-full border rounded p-2" />
-          </label>
+
+      <!-- Form -->
+      <form method="post" class="space-y-4">
+        <input type="hidden" name="csrf" value="<?= csrf() ?>">
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Full Name</label>
+          <input name="name" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"/>
         </div>
-        <label class="block mb-2">
-          <span class="text-sm">Address</span>
-          <textarea name="address" class="mt-1 block w-full border rounded p-2"></textarea>
-        </label>
-        <label class="block mb-4">
-          <span class="text-sm">Gender</span>
-          <select name="gender" class="mt-1 block w-full border rounded p-2">
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Email</label>
+          <input name="email" type="email" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"/>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Password</label>
+          <input name="password" type="password" required minlength="6" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"/>
+          <p class="text-xs text-gray-500 mt-1">Must be at least 6 characters long</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Phone</label>
+            <input name="phone" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Date of Birth</label>
+            <input name="dob" type="date" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"/>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Address</label>
+          <textarea name="address" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Gender</label>
+          <select name="gender" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500">
             <option value="other">Prefer not to say</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
           </select>
-        </label>
-        <div class="flex justify-between items-center">
-          <button class="px-4 py-2 bg-green-600 text-white rounded">Create account</button>
-          <a href="login.php" class="text-sm text-blue-600">Already have an account?</a>
         </div>
+
+        <button class="w-full mt-2 px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 shadow-md transition transform hover:scale-[1.02]">
+          Create Account
+        </button>
       </form>
+
+      <!-- Footer -->
+      <p class="text-center text-sm text-gray-600 mt-6">
+        Already registered?
+        <a href="login.php" class="text-indigo-600 hover:underline">Login here</a>
+      </p>
     </div>
   </div>
 </body>
