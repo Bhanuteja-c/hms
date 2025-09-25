@@ -1,34 +1,44 @@
-# Hospital_Management_System
-### Hospital Management System is a web application developed using PHP and MySQL. It provides functionalities for managing hospital operations, including patient appointments, doctor approvals, prescription and treatment management, billing, and more. The system is designed to be user-friendly and efficient in managing hospital processes.
-## Features
-+ Patient Appointment Booking: Patients can book appointments with doctors.
-+ Doctor Approval: Doctors can review and approve patient appointments.
-+ Prescription and Treatment Management: Doctors can add prescriptions and treatments for patients.
-+ Patient Login: Patients can log in to view their prescriptions, treatments, and bills.
-+ Online Payments: Patients can make payments for their bills online.
-+ Admin Functions: Admins can add, view, and delete doctors, patients, and treatments.
+# Healsync — Hospital Management System (PHP + MySQL)
 
---------------
+## Overview
+Healsync is a demo Hospital Management System built with PHP (PDO), MySQL, Tailwind CSS, and minimal JavaScript. It demonstrates patient booking, doctor approvals, prescriptions, treatments, billing, and admin management.
+
 ## Prerequisites
-1. Install XAMPP web server
-2. Any Editor (Preferably VS Code or Sublime Text)
-3. Any web browser with latest version
----------------------
-## Languages and Technologies used
-1. HTML5/CSS3
-2. JavaScript (to create dynamically updating content)
-3. Bootstrap (An HTML, CSS, and JS library)
-4. XAMPP (A web server by Apache Friends)
-5. Php
-6. MySQL (An RDBMS that uses SQL)
-------------------------
-## Steps to run the project in your machine
-1. Download and install XAMPP in your machine
-2. Clone or download the repository
-3. Extract all the files and move it to the 'htdocs' folder of your XAMPP directory.
-4. Start the Apache and Mysql in your XAMPP control panel.
-5. Open your web browser and type 'localhost/phpmyadmin'
-6. In phpmyadmin page, create a new database from the left panel and name it as 'ohmsphp'
-7. Import the file 'ohmsphp.sql' from DATABASE FILE named folder ,inside your newly created database and click ok.
-8. Open a new tab and type 'localhost/foldername' in the url of your browser
---------------------
+- XAMPP (Apache + PHP + MySQL) — tested on PHP 8.x
+- Composer (optional, if you add libraries)
+- Browser
+
+## Installation / Local Setup (XAMPP)
+1. Copy the `healsync` folder into `htdocs` (e.g., `C:\xampp\htdocs\healsync`).
+2. Start Apache and MySQL via XAMPP Control Panel.
+3. Visit `http://localhost/healsync/setup.php` in your browser. This will:
+   - Create the `healsync` DB and tables.
+   - Seed an admin (admin@hms.com / admin123), doctors (doctor123), and patients (patient123).
+4. After setup succeeds, **delete `setup.php`** for security.
+5. Login:
+   - Admin: `admin@hms.com` / `admin123`
+   - Doctor: e.g., `alice@hms.com` / `doctor123`
+   - Patient: `john@hms.com` / `patient123`
+
+## File structure
+(see full file tree in the project root README or in the ZIP layout above)
+
+## Notes on Security & Best Practices
+- Passwords are hashed via `password_hash()`; always keep PHP up to date.
+- All DB queries use prepared statements via PDO to prevent SQL injection.
+- CSRF tokens implemented via `$_SESSION['csrf_token']` — validate tokens on POST.
+- Session cookie flags set for `httponly` and `samesite`.
+- For production: use HTTPS, secure cookie flags (`secure`), input validation, and rate-limiting.
+- Remove `setup.php` after running.
+
+## Extending the project
+- Add email sending for registration and forgot password (PHPMailer recommended).
+- Use a JS calendar library (FullCalendar) for doctor calendar views.
+- Integrate a real payment gateway (Stripe/PayPal) for live payments.
+- Add unit and integration tests (PHPUnit).
+
+## Troubleshooting
+- DB connection errors: update DB constants in `includes/config.php`.
+- If Tailwind CDN is blocked, you can download Tailwind or use a local build.
+
+Enjoy! — Healsync
