@@ -77,29 +77,53 @@ $unpaid = $bills->fetchColumn() ?: 0;
         <i data-lucide="zap" class="w-6 h-6 text-indigo-600"></i>
         Quick Links
       </h3>
-      <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
+      <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        
+        <!-- Book Appointment -->
         <a href="book_appointment.php"
            class="bg-white hover:bg-indigo-50 border border-indigo-100 p-5 rounded-xl flex flex-col items-center gap-3 shadow transition">
           <i data-lucide="plus-circle" class="w-7 h-7 text-indigo-600"></i>
           <span class="font-medium">Book Appointment</span>
         </a>
-        <a href="view_appointments.php"
+
+        <!-- My Appointments -->
+        <a href="appointments.php"
            class="bg-white hover:bg-indigo-50 border border-indigo-100 p-5 rounded-xl flex flex-col items-center gap-3 shadow transition">
           <i data-lucide="calendar-days" class="w-7 h-7 text-indigo-600"></i>
           <span class="font-medium">My Appointments</span>
         </a>
-        <a href="view_prescriptions.php"
+
+        <!-- Prescriptions -->
+        <a href="prescriptions.php"
            class="bg-white hover:bg-indigo-50 border border-indigo-100 p-5 rounded-xl flex flex-col items-center gap-3 shadow transition">
           <i data-lucide="pill" class="w-7 h-7 text-indigo-600"></i>
           <span class="font-medium">Prescriptions</span>
         </a>
-        <a href="view_bills.php"
+
+        <!-- Treatments -->
+        <a href="treatments.php"
+           class="bg-white hover:bg-indigo-50 border border-indigo-100 p-5 rounded-xl flex flex-col items-center gap-3 shadow transition">
+          <i data-lucide="stethoscope" class="w-7 h-7 text-indigo-600"></i>
+          <span class="font-medium">Treatments</span>
+        </a>
+
+        <!-- Bills -->
+        <a href="bills.php"
            class="bg-white hover:bg-indigo-50 border border-indigo-100 p-5 rounded-xl flex flex-col items-center gap-3 shadow transition">
           <i data-lucide="credit-card" class="w-7 h-7 text-indigo-600"></i>
-          <span class="font-medium">Bills</span>
+          <span class="font-medium">My Bills</span>
         </a>
+
+        <!-- Profile -->
+        <a href="profile.php"
+           class="bg-white hover:bg-indigo-50 border border-indigo-100 p-5 rounded-xl flex flex-col items-center gap-3 shadow transition">
+          <i data-lucide="user" class="w-7 h-7 text-indigo-600"></i>
+          <span class="font-medium">My Profile</span>
+        </a>
+
       </div>
     </div>
+
   </main>
 
   <script> lucide.createIcons(); </script>
