@@ -10,9 +10,10 @@ try {
         [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
         ]
     );
 } catch (PDOException $e) {
-    // In production: log to secure file instead of showing
-    die("DB Connection failed: " . $e->getMessage());
+    // Don't expose details in production; for dev show message
+    die("DB connection failed: " . $e->getMessage());
 }

@@ -6,10 +6,29 @@ require_once __DIR__ . '/../includes/functions.php';
 
 $pid = current_user_id();
 
-// Fetch bills
-$stmt = $pdo->prepare("SELECT * FROM bills WHERE patient_id=:pid ORDER BY id DESC");
+// Fetch all bills for this patient
+$stmt = $pdo->prepare("
+    SELECT b.*, u.name AS doctor_name
+    FROM bills b
+    JOIN users u ON b.doctor_id = u.id
+    WHERE b.patient_id = :pid
+    ORDER BY b.created_at DESC
+");
 $stmt->execute([':pid' => $pid]);
 $bills = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Fetch bill items
+$billItems = [];
+if ($bills) {
+    $ids = array_column($bills, 'id');
+    $in  = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = $pdo->prepare("SELECT * FROM bill_items WHERE bill_id IN ($in)");
+    $stmt->execute($ids);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($rows as $r) {
+        $billItems[$r['bill_id']][] = $r;
+    }
+}
 ?>
 <!doctype html>
 <html>
@@ -23,59 +42,87 @@ $bills = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <?php include __DIR__ . '/../includes/sidebar_patient.php'; ?>
   <?php include __DIR__ . '/../includes/header.php'; ?>
 
-  <main class="pt-20 p-6 md:ml-64 transition-all duration-300">
+  <main class="pt-20 p-6 md:ml-64 max-w-4xl mx-auto">
     <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
       <i data-lucide="credit-card" class="w-6 h-6 text-indigo-600"></i>
-      My Bills & Payments
+      My Bills
     </h2>
 
-    <?php if ($bills): ?>
-      <div class="overflow-x-auto">
-        <table class="w-full bg-white rounded shadow overflow-hidden">
-          <thead class="bg-gray-100">
-            <tr>
-              <th class="text-left p-3">Bill ID</th>
-              <th class="text-left p-3">Total Amount</th>
-              <th class="text-left p-3">Status</th>
-              <th class="text-left p-3">Paid At</th>
-              <th class="text-left p-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($bills as $b): ?>
-              <tr class="border-t hover:bg-gray-50">
-                <td class="p-3 font-medium">#<?=e($b['id'])?></td>
-                <td class="p-3 text-indigo-600 font-semibold">$<?=number_format($b['total_amount'], 2)?></td>
-                <td class="p-3">
-                  <?php if ($b['status']==='paid'): ?>
-                    <span class="px-2 py-1 text-xs bg-green-100 text-green-600 rounded-full flex items-center gap-1 w-fit">
-                      <i data-lucide="check-circle" class="w-3 h-3"></i> Paid
-                    </span>
-                  <?php else: ?>
-                    <span class="px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full flex items-center gap-1 w-fit">
-                      <i data-lucide="x-circle" class="w-3 h-3"></i> Unpaid
-                    </span>
-                  <?php endif; ?>
-                </td>
-                <td class="p-3"><?= $b['paid_at'] ? date('d M Y', strtotime($b['paid_at'])) : '-' ?></td>
-                <td class="p-3 flex gap-2">
-                  <a href="bill_view.php?id=<?=e($b['id'])?>" target="_blank" 
-                     class="px-3 py-1 bg-indigo-600 text-white rounded text-sm flex items-center gap-1 hover:bg-indigo-700 transition">
-                    <i data-lucide="file-text" class="w-4 h-4"></i> View
-                  </a>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
-    <?php else: ?>
+    <?php if (!$bills): ?>
       <p class="text-gray-500">No bills found.</p>
+    <?php else: ?>
+      <div class="space-y-6">
+        <?php foreach ($bills as $b): ?>
+          <div class="bg-white shadow rounded-lg overflow-hidden">
+            <!-- Header -->
+            <div class="flex justify-between items-center p-4 border-b">
+              <div>
+                <h3 class="font-semibold text-lg">Bill #<?= e($b['id']) ?></h3>
+                <p class="text-sm text-gray-500">
+                  Doctor: <?= e($b['doctor_name']) ?> | 
+                  Date: <?= date('d M Y H:i', strtotime($b['created_at'])) ?>
+                </p>
+              </div>
+              <?php
+                $statusClass = match($b['status']) {
+                  'paid' => 'bg-green-100 text-green-700',
+                  'offline_pending' => 'bg-yellow-100 text-yellow-700',
+                  default => 'bg-red-100 text-red-700'
+                };
+              ?>
+              <span class="px-3 py-1 rounded-full text-sm <?= $statusClass ?>">
+                <?= ucfirst(str_replace('_',' ', $b['status'])) ?>
+              </span>
+            </div>
+
+            <!-- Bill items -->
+            <div class="divide-y">
+              <?php if (!empty($billItems[$b['id']])): ?>
+                <?php foreach ($billItems[$b['id']] as $it): ?>
+                  <div class="flex justify-between p-4">
+                    <div class="text-gray-700"><?= e($it['description']) ?></div>
+                    <div class="font-medium">₹<?= number_format($it['amount'], 2) ?></div>
+                  </div>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <div class="p-4 text-sm text-gray-500">No bill items found.</div>
+              <?php endif; ?>
+            </div>
+
+            <!-- Total -->
+            <div class="flex justify-between p-4 border-t font-bold">
+              <div>Total</div>
+              <div>₹<?= number_format($b['total_amount'], 2) ?></div>
+            </div>
+
+            <!-- Actions -->
+            <div class="p-4 border-t flex justify-between items-center">
+              <a href="bill_view.php?id=<?= e($b['id']) ?>"
+                 class="px-3 py-1 bg-gray-200 rounded text-sm hover:bg-gray-300 flex items-center gap-1">
+                <i data-lucide="file-text" class="w-4 h-4"></i> View
+              </a>
+
+              <?php if ($b['status'] === 'unpaid'): ?>
+                <a href="pay.php?bill_id=<?= e($b['id']) ?>"
+                   class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center gap-2">
+                  <i data-lucide="credit-card" class="w-4 h-4"></i> Pay Now
+                </a>
+              <?php elseif ($b['status'] === 'offline_pending'): ?>
+                <span class="text-yellow-700 text-sm">
+                  Awaiting payment at hospital reception
+                </span>
+              <?php else: ?>
+                <span class="text-green-600 text-sm">
+                  Paid on <?= date('d M Y', strtotime($b['paid_at'] ?? $b['updated_at'] ?? $b['created_at'])) ?>
+                </span>
+              <?php endif; ?>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
     <?php endif; ?>
   </main>
 
-  <script>
-    lucide.createIcons();
-  </script>
+  <script>lucide.createIcons();</script>
 </body>
 </html>

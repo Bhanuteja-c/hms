@@ -19,55 +19,65 @@ $doctors = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Handle submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $doctor_id = intval($_POST['doctor_id'] ?? 0);
-    $date_time = trim($_POST['date_time'] ?? '');
-    $reason    = trim($_POST['reason'] ?? '');
+    if (!verify_csrf($_POST['csrf'] ?? '')) {
+        $message = "<div class='bg-red-50 border border-red-200 text-red-700 p-3 rounded mb-4'>Invalid CSRF token.</div>";
+    } else {
+        $doctor_id = intval($_POST['doctor_id'] ?? 0);
+        $date_time = trim($_POST['date_time'] ?? '');
+        $reason    = trim($_POST['reason'] ?? '');
 
-    if ($doctor_id && $date_time && $reason) {
-        // Check if slot is already taken
-        $check = $pdo->prepare("
-          SELECT COUNT(*) 
-          FROM appointments 
-          WHERE doctor_id = :did AND date_time = :dt 
-            AND status IN ('pending','approved')
-        ");
-        $check->execute([':did'=>$doctor_id, ':dt'=>$date_time]);
-
-        if ($check->fetchColumn() > 0) {
-            $message = "<div class='bg-red-50 border border-red-200 text-red-700 p-3 rounded mb-4'>
-                          This slot is already booked. Please choose another.
-                        </div>";
-        } else {
-            // Insert appointment
-            $stmt = $pdo->prepare("
-              INSERT INTO appointments 
-              (patient_id, doctor_id, date_time, reason, status, created_at)
-              VALUES (:pid, :did, :dt, :reason, 'pending', NOW())
+        if ($doctor_id && $date_time && $reason) {
+            // Check if slot already taken
+            $check = $pdo->prepare("
+              SELECT COUNT(*) 
+              FROM appointments 
+              WHERE doctor_id = :did AND date_time = :dt 
+                AND status IN ('pending','approved')
             ");
-            $stmt->execute([
-                ':pid' => $pid,
-                ':did' => $doctor_id,
-                ':dt'  => $date_time,
-                ':reason' => $reason
-            ]);
+            $check->execute([':did'=>$doctor_id, ':dt'=>$date_time]);
 
-            // ✅ Notify doctor
-            $msg  = "New appointment request from " . e($_SESSION['user']['name']) .
-                    " on " . date('d M Y H:i', strtotime($date_time));
-            $link = "/healsync/doctor/pending_appointments.php";
+            if ($check->fetchColumn() > 0) {
+                $message = "<div class='bg-red-50 border border-red-200 text-red-700 p-3 rounded mb-4'>
+                              This slot is already booked. Please choose another.
+                            </div>";
+            } else {
+                // Insert appointment
+                $stmt = $pdo->prepare("
+                  INSERT INTO appointments 
+                  (patient_id, doctor_id, date_time, reason, status, created_at)
+                  VALUES (:pid, :did, :dt, :reason, 'pending', NOW())
+                ");
+                $stmt->execute([
+                    ':pid' => $pid,
+                    ':did' => $doctor_id,
+                    ':dt'  => $date_time,
+                    ':reason' => $reason
+                ]);
 
-            $pdo->prepare("INSERT INTO notifications (user_id,message,link) 
-                           VALUES (:uid,:msg,:link)")
-                ->execute([':uid'=>$doctor_id, ':msg'=>$msg, ':link'=>$link]);
+                // Log action
+                audit_log($pdo, $pid, 'book_appointment', json_encode([
+                    'doctor_id' => $doctor_id, 
+                    'date_time' => $date_time
+                ]));
 
-            $message = "<div class='bg-green-50 border border-green-200 text-green-700 p-3 rounded mb-4'>
-                          Appointment request submitted! Pending doctor approval.
+                // Notify doctor
+                $msg  = "New appointment request from " . e($_SESSION['user']['name']) .
+                        " on " . date('d M Y H:i', strtotime($date_time));
+                $link = "/healsync/doctor/appointments.php";
+
+                $pdo->prepare("INSERT INTO notifications (user_id,message,link) 
+                               VALUES (:uid,:msg,:link)")
+                    ->execute([':uid'=>$doctor_id, ':msg'=>$msg, ':link'=>$link]);
+
+                $message = "<div class='bg-green-50 border border-green-200 text-green-700 p-3 rounded mb-4'>
+                              Appointment request submitted! Pending doctor approval.
+                            </div>";
+            }
+        } else {
+            $message = "<div class='bg-red-50 border border-red-200 text-red-700 p-3 rounded mb-4'>
+                          All fields are required.
                         </div>";
         }
-    } else {
-        $message = "<div class='bg-red-50 border border-red-200 text-red-700 p-3 rounded mb-4'>
-                      All fields are required.
-                    </div>";
     }
 }
 ?>
@@ -94,6 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?= $message ?>
 
     <form method="post" class="bg-white p-6 rounded-xl shadow space-y-4">
+      <input type="hidden" name="csrf" value="<?= csrf() ?>">
+
       <!-- Doctor -->
       <div>
         <label class="block mb-1 font-medium">Doctor</label>

@@ -6,6 +6,38 @@ require_once __DIR__ . '/../includes/functions.php';
 
 $did = current_user_id();
 
+// Handle mark completed
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf($_POST['csrf'] ?? '')) {
+        die("Invalid CSRF token.");
+    }
+
+    $apptId = intval($_POST['appointment_id'] ?? 0);
+
+    // Ensure appointment belongs to this doctor & is approved
+    $stmt = $pdo->prepare("SELECT * FROM appointments WHERE id=:id AND doctor_id=:did AND status='approved'");
+    $stmt->execute([':id' => $apptId, ':did' => $did]);
+    $appt = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($appt) {
+        // Update status → completed
+        $pdo->prepare("UPDATE appointments SET status='completed' WHERE id=:id")->execute([':id' => $apptId]);
+
+        // ✅ Notify patient
+        $msg = "Your appointment on " . date('d M Y H:i', strtotime($appt['date_time'])) . " has been marked as completed.";
+        $pdo->prepare("INSERT INTO notifications (user_id,message,link) VALUES (:uid,:msg,:link)")
+            ->execute([
+                ':uid'  => $appt['patient_id'],
+                ':msg'  => $msg,
+                ':link' => "/healsync/patient/appointments.php"
+            ]);
+
+        header("Location: approved_appointments.php?status=completed");
+        exit;
+    }
+}
+
+// Fetch approved appointments
 $stmt = $pdo->prepare("
   SELECT a.*, u.name AS patient_name, u.email AS patient_email
   FROM appointments a
@@ -64,6 +96,14 @@ $apps = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 class="px-3 py-1 bg-green-600 text-white rounded flex items-center gap-1 hover:bg-green-700 text-sm">
                 <i data-lucide="stethoscope" class="w-4 h-4"></i> Treatment
               </a>
+              <form method="post" class="inline">
+                <input type="hidden" name="csrf" value="<?=csrf()?>">
+                <input type="hidden" name="appointment_id" value="<?=e($a['id'])?>">
+                <button type="submit"
+                  class="px-3 py-1 bg-indigo-600 text-white rounded flex items-center gap-1 hover:bg-indigo-700 text-sm">
+                  <i data-lucide="check-circle" class="w-4 h-4"></i> Mark Completed
+                </button>
+              </form>
             </td>
           </tr>
           <?php endforeach; ?>

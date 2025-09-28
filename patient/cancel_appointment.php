@@ -27,18 +27,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $appt = $stmt->fetch();
 
         if ($appt) {
-            // Update status
             $pdo->prepare("UPDATE appointments SET status = 'cancelled' WHERE id = :id")
                 ->execute([':id' => $aid]);
 
-            // Log action
             audit_log($pdo, $pid, 'cancel_appointment', json_encode(['appointment_id' => $aid]));
 
             // Notify doctor
             $doctorId = $appt['doctor_id'];
             $msg  = "Appointment on " . date('d M Y H:i', strtotime($appt['date_time'])) . 
                     " was cancelled by the patient.";
-            $link = "/healsync/doctor/approved_appointments.php";
+            $link = "/healsync/doctor/appointments.php";
 
             $pdo->prepare("INSERT INTO notifications (user_id, message, link) 
                            VALUES (:uid, :msg, :link)")
@@ -47,6 +45,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Redirect back to appointments list
 header("Location: appointments.php?status=cancelled");
 exit;

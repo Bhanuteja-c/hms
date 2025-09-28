@@ -1,38 +1,12 @@
 <?php
+// patient/appointments.php
 require_once __DIR__ . '/../includes/auth.php';
 require_role('patient');
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 
 $pid = current_user_id();
-$message = "";
-
-// Cancel appointment if requested
-if (isset($_GET['cancel'])) {
-    $appt_id = intval($_GET['cancel']);
-    $stmt = $pdo->prepare("SELECT * FROM appointments WHERE id=:id AND patient_id=:pid AND status='pending'");
-    $stmt->execute([':id'=>$appt_id, ':pid'=>$pid]);
-    $appt = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($appt) {
-        $pdo->prepare("DELETE FROM appointments WHERE id=:id")->execute([':id'=>$appt_id]);
-        $message = "<p class='text-green-600 mb-4'>Appointment cancelled successfully.</p>";
-    } else {
-        $message = "<p class='text-red-600 mb-4'>Cannot cancel this appointment.</p>";
-    }
-}
-
-// Fetch all appointments
-$stmt = $pdo->prepare("
-    SELECT a.*, u.name AS doctor_name, d.specialty
-    FROM appointments a
-    JOIN users u ON a.doctor_id=u.id
-    JOIN doctors d ON u.id=d.id
-    WHERE a.patient_id=:pid
-    ORDER BY a.date_time DESC
-");
-$stmt->execute([':pid'=>$pid]);
-$appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$statusMsg = $_GET['status'] ?? "";
 ?>
 <!doctype html>
 <html>
@@ -52,7 +26,24 @@ $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
       My Appointments
     </h2>
 
-    <?= $message ?>
+    <?php if ($statusMsg === 'cancelled'): ?>
+      <div class="bg-green-50 border border-green-200 text-green-700 p-3 rounded mb-4">
+        Appointment cancelled successfully.
+      </div>
+    <?php endif; ?>
+
+    <?php
+    $stmt = $pdo->prepare("
+        SELECT a.*, u.name AS doctor_name, d.specialty
+        FROM appointments a
+        JOIN users u ON a.doctor_id=u.id
+        JOIN doctors d ON u.id=d.id
+        WHERE a.patient_id=:pid
+        ORDER BY a.date_time DESC
+    ");
+    $stmt->execute([':pid'=>$pid]);
+    $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    ?>
 
     <?php if ($appointments): ?>
       <div class="overflow-x-auto">
@@ -70,10 +61,10 @@ $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <tbody>
             <?php foreach ($appointments as $a): ?>
               <tr class="border-t hover:bg-gray-50">
-                <td class="p-3"><?=date('d M Y H:i', strtotime($a['date_time']))?></td>
-                <td class="p-3"><?=e($a['doctor_name'])?></td>
-                <td class="p-3"><?=e($a['specialty'])?></td>
-                <td class="p-3"><?=e($a['reason'])?></td>
+                <td class="p-3"><?= date('d M Y H:i', strtotime($a['date_time'])) ?></td>
+                <td class="p-3"><?= e($a['doctor_name']) ?></td>
+                <td class="p-3"><?= e($a['specialty']) ?></td>
+                <td class="p-3"><?= e($a['reason']) ?></td>
                 <td class="p-3">
                   <?php if ($a['status']==='pending'): ?>
                     <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded-full flex items-center gap-1 w-fit">
@@ -87,6 +78,10 @@ $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <span class="px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full flex items-center gap-1 w-fit">
                       <i data-lucide="x-circle" class="w-3 h-3"></i> Rejected
                     </span>
+                  <?php elseif ($a['status']==='cancelled'): ?>
+                    <span class="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded-full flex items-center gap-1 w-fit">
+                      <i data-lucide="ban" class="w-3 h-3"></i> Cancelled
+                    </span>
                   <?php else: ?>
                     <span class="px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-full flex items-center gap-1 w-fit">
                       <i data-lucide="check" class="w-3 h-3"></i> Completed
@@ -94,12 +89,14 @@ $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                   <?php endif; ?>
                 </td>
                 <td class="p-3">
-                  <?php if ($a['status']==='pending'): ?>
-                    <a href="?cancel=<?=$a['id']?>" 
-                       onclick="return confirm('Cancel this appointment?');"
-                       class="px-3 py-1 bg-red-600 text-white rounded text-sm flex items-center gap-1 hover:bg-red-700 transition">
-                      <i data-lucide="trash-2" class="w-4 h-4"></i> Cancel
-                    </a>
+                  <?php if (in_array($a['status'], ['pending','approved']) && strtotime($a['date_time']) > time()): ?>
+                    <form method="post" action="cancel_appointment.php" onsubmit="return confirm('Cancel this appointment?');">
+                      <input type="hidden" name="csrf" value="<?= csrf() ?>">
+                      <input type="hidden" name="appointment_id" value="<?= $a['id'] ?>">
+                      <button type="submit" class="px-3 py-1 bg-red-600 text-white rounded text-sm flex items-center gap-1 hover:bg-red-700 transition">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> Cancel
+                      </button>
+                    </form>
                   <?php else: ?>
                     <span class="text-gray-400 text-sm">-</span>
                   <?php endif; ?>
@@ -114,8 +111,6 @@ $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <?php endif; ?>
   </main>
 
-  <script>
-    lucide.createIcons();
-  </script>
+  <script>lucide.createIcons();</script>
 </body>
 </html>

@@ -85,14 +85,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="relative">
             <input id="password" name="password" type="password" required
                   class="w-full border rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-indigo-500"/>
-
-            <!-- Toggle button -->
             <button type="button" id="togglePassword"
                     class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-indigo-600">
-              <i data-lucide="eye"></i> <!-- 👁 Default eye icon -->
+              <i data-lucide="eye"></i>
             </button>
           </div>
         </div>
+
 
 
 

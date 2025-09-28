@@ -1,4 +1,5 @@
 <?php
+// doctor/pending_appointments.php
 require_once __DIR__ . '/../includes/auth.php';
 require_role('doctor');
 require_once __DIR__ . '/../includes/db.php';
@@ -6,18 +7,7 @@ require_once __DIR__ . '/../includes/functions.php';
 
 $doctorId = current_user_id();
 
-// Fetch pending appointments
-$stmt = $pdo->prepare("
-  SELECT a.*, u.name as patient_name, u.email as patient_email
-  FROM appointments a
-  JOIN users u ON a.patient_id = u.id
-  WHERE a.doctor_id=:did AND a.status='pending'
-  ORDER BY a.date_time ASC
-");
-$stmt->execute([':did'=>$doctorId]);
-$pending = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Handle approve/reject
+// Handle approve/reject FIRST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf($_POST['csrf'] ?? '')) {
         die("Invalid CSRF token.");
@@ -32,23 +22,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($appt) {
         if ($action === 'approve') {
-            $pdo->prepare("UPDATE appointments SET status='approved' WHERE id=:id")->execute([':id'=>$apptId]);
+            $pdo->prepare("UPDATE appointments SET status='approved' WHERE id=:id")
+                ->execute([':id'=>$apptId]);
 
-            // ✅ Notify patient
+            audit_log($pdo, $doctorId, 'approve_appointment', json_encode(['appointment_id'=>$apptId]));
+
+            // Notify patient
             $msg = "Your appointment on ".date('d M Y H:i', strtotime($appt['date_time']))." has been approved.";
-            $pdo->prepare("INSERT INTO notifications (user_id,message,link) VALUES (:uid,:msg,:link)")
-                ->execute([':uid'=>$appt['patient_id'], ':msg'=>$msg, ':link'=>"/healsync/patient/appointments.php"]);
+            $pdo->prepare("INSERT INTO notifications (user_id,message,link) 
+                           VALUES (:uid,:msg,:link)")
+                ->execute([
+                    ':uid'=>$appt['patient_id'], 
+                    ':msg'=>$msg, 
+                    ':link'=>"/healsync/patient/appointments.php"
+                ]);
         } elseif ($action === 'reject') {
-            $pdo->prepare("UPDATE appointments SET status='rejected' WHERE id=:id")->execute([':id'=>$apptId]);
+            $pdo->prepare("UPDATE appointments SET status='rejected' WHERE id=:id")
+                ->execute([':id'=>$apptId]);
 
-            // ✅ Notify patient
+            audit_log($pdo, $doctorId, 'reject_appointment', json_encode(['appointment_id'=>$apptId]));
+
+            // Notify patient
             $msg = "Your appointment on ".date('d M Y H:i', strtotime($appt['date_time']))." has been rejected.";
-            $pdo->prepare("INSERT INTO notifications (user_id,message,link) VALUES (:uid,:msg,:link)")
-                ->execute([':uid'=>$appt['patient_id'], ':msg'=>$msg, ':link'=>"/healsync/patient/appointments.php"]);
+            $pdo->prepare("INSERT INTO notifications (user_id,message,link) 
+                           VALUES (:uid,:msg,:link)")
+                ->execute([
+                    ':uid'=>$appt['patient_id'], 
+                    ':msg'=>$msg, 
+                    ':link'=>"/healsync/patient/appointments.php"
+                ]);
         }
-        header("Location: pending_appointments.php"); exit;
+        header("Location: pending_appointments.php"); 
+        exit;
     }
 }
+
+// Fetch pending appointments
+$stmt = $pdo->prepare("
+  SELECT a.*, u.name as patient_name, u.email as patient_email
+  FROM appointments a
+  JOIN users u ON a.patient_id = u.id
+  WHERE a.doctor_id=:did AND a.status='pending'
+  ORDER BY a.date_time ASC
+");
+$stmt->execute([':did'=>$doctorId]);
+$pending = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!doctype html>
 <html>
@@ -82,15 +100,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </thead>
         <tbody>
           <?php foreach($pending as $p): ?>
-          <tr class="border-t">
+          <tr class="border-t hover:bg-gray-50">
             <td class="px-4 py-2">
               <div class="font-semibold"><?=e($p['patient_name'])?></div>
               <div class="text-sm text-gray-500"><?=e($p['patient_email'])?></div>
             </td>
             <td class="px-4 py-2"><?=e(format_datetime($p['date_time']))?></td>
             <td class="px-4 py-2"><?=e($p['reason'])?></td>
-            <td class="px-4 py-2 space-x-2">
-              <form method="post" class="inline">
+            <td class="px-4 py-2">
+              <form method="post" class="flex gap-2">
                 <input type="hidden" name="csrf" value="<?=csrf()?>">
                 <input type="hidden" name="appointment_id" value="<?=e($p['id'])?>">
                 <button name="action" value="approve"

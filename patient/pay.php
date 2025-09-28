@@ -19,42 +19,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf($_POST['csrf'] ?? '')) {
         $errors[] = "Invalid CSRF token.";
     } else {
-        $card = trim($_POST['card'] ?? '');
-        $amount = floatval($bill['total_amount']);
+        $method = $_POST['method'] ?? '';
 
-        if (!$card || strlen($card) < 12) {
-            $errors[] = "Invalid card number.";
-        }
+        if ($method === 'card') {
+            $card = trim($_POST['card'] ?? '');
+            $amount = floatval($bill['total_amount']);
 
-        if (empty($errors)) {
-            $ok = rand(0,9) > 1; // ~80% success
-            if ($ok) {
-                $pdo->beginTransaction();
-                $pdo->prepare("UPDATE bills SET status='paid', paid_at=NOW() WHERE id=:id")
-                    ->execute([':id'=>$bill_id]);
-                $pdo->prepare("INSERT INTO payments (bill_id,amount,method,transaction_id) 
-                               VALUES (:bid,:amt,'card',:tx)")
-                    ->execute([
-                        ':bid'=>$bill_id,
-                        ':amt'=>$amount,
-                        ':tx'=>bin2hex(random_bytes(6))
-                    ]);
-                audit_log($pdo, current_user_id(), 'payment_success', json_encode(['bill_id'=>$bill_id,'amount'=>$amount]));
-
-                // ✅ Notify patient
-                $pdo->prepare("INSERT INTO notifications (user_id,message,link) VALUES (:uid,:msg,:link)")
-                    ->execute([
-                        ':uid'=>current_user_id(),
-                        ':msg'=>"Your payment of $".number_format($amount,2)." was successful.",
-                        ':link'=>"/healsync/patient/bills.php"
-                    ]);
-
-                $pdo->commit();
-                $success = "Payment successful. Receipt generated.";
-            } else {
-                audit_log($pdo, current_user_id(), 'payment_failed', json_encode(['bill_id'=>$bill_id]));
-                $errors[] = "Payment failed (simulated). Please try again.";
+            if (!$card || strlen($card) < 12) {
+                $errors[] = "Invalid card number.";
             }
+
+            if (empty($errors)) {
+                $ok = rand(0,9) > 1; // simulate ~80% success
+                if ($ok) {
+                    $pdo->beginTransaction();
+                    $pdo->prepare("UPDATE bills SET status='paid', paid_at=NOW() WHERE id=:id")
+                        ->execute([':id'=>$bill_id]);
+                    $pdo->prepare("INSERT INTO payments (bill_id,amount,method,transaction_id) 
+                                   VALUES (:bid,:amt,'card',:tx)")
+                        ->execute([
+                            ':bid'=>$bill_id,
+                            ':amt'=>$amount,
+                            ':tx'=>bin2hex(random_bytes(6))
+                        ]);
+                    audit_log($pdo, current_user_id(), 'payment_success', json_encode(['bill_id'=>$bill_id,'amount'=>$amount]));
+
+                    $pdo->prepare("INSERT INTO notifications (user_id,message,link) VALUES (:uid,:msg,:link)")
+                        ->execute([
+                            ':uid'=>current_user_id(),
+                            ':msg'=>"Your online payment of ₹".number_format($amount,2)." was successful.",
+                            ':link'=>"/healsync/patient/bills.php"
+                        ]);
+
+                    $pdo->commit();
+                    $success = "Payment successful. Receipt generated.";
+                } else {
+                    audit_log($pdo, current_user_id(), 'payment_failed', json_encode(['bill_id'=>$bill_id]));
+                    $errors[] = "Payment failed (simulated). Please try again.";
+                }
+            }
+        } elseif ($method === 'offline') {
+            // Mark bill as offline pending
+            $pdo->prepare("UPDATE bills SET status='offline_pending' WHERE id=:id")
+                ->execute([':id'=>$bill_id]);
+
+            // Notify patient
+            $pdo->prepare("INSERT INTO notifications (user_id,message,link) VALUES (:uid,:msg,:link)")
+                ->execute([
+                    ':uid'=>current_user_id(),
+                    ':msg'=>"Your bill #$bill_id is marked for offline payment. Please pay at the reception desk.",
+                    ':link'=>"/healsync/patient/bills.php"
+                ]);
+
+            $success = "Bill marked for offline payment. Please pay at reception.";
         }
     }
 }
@@ -78,8 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </h2>
 
     <div class="bg-white p-4 rounded shadow mb-4">
-      <p>Amount: <strong>$<?= number_format($bill['total_amount'],2) ?></strong></p>
-      <p>Status: <?= e($bill['status']) ?></p>
+      <p>Amount: <strong>₹<?= number_format($bill['total_amount'],2) ?></strong></p>
+      <p>Status: <?= ucfirst($bill['status']) ?></p>
     </div>
 
     <?php if ($errors): ?>
@@ -94,28 +111,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     <?php endif; ?>
 
-    <?php if ($bill['status'] !== 'paid'): ?>
+    <?php if (!in_array($bill['status'], ['paid','offline_pending'])): ?>
     <form method="post" class="bg-white p-6 rounded shadow space-y-4">
       <input type="hidden" name="csrf" value="<?= csrf() ?>">
 
       <div>
-        <label class="block mb-1 font-medium">Card number (dummy)</label>
-        <input name="card" class="w-full border rounded p-2" required>
+        <label class="block mb-1 font-medium">Select Payment Method</label>
+        <select name="method" id="method" class="w-full border rounded p-2" required onchange="toggleMethod(this.value)">
+          <option value="">-- Choose --</option>
+          <option value="card">Online (Card)</option>
+          <option value="offline">Offline (Cash at Reception)</option>
+        </select>
       </div>
 
-      <div>
-        <label class="block mb-1 font-medium">Name on card</label>
-        <input name="cname" class="w-full border rounded p-2" required>
+      <!-- Online Payment Fields -->
+      <div id="card-fields" class="hidden space-y-4">
+        <div>
+          <label class="block mb-1 font-medium">Card number</label>
+          <input name="card" class="w-full border rounded p-2">
+        </div>
+        <div>
+          <label class="block mb-1 font-medium">Name on card</label>
+          <input name="cname" class="w-full border rounded p-2">
+        </div>
       </div>
 
       <button class="px-4 py-2 bg-green-600 text-white rounded flex items-center gap-2 hover:bg-green-700">
         <i data-lucide="check-circle" class="w-5 h-5"></i>
-        Pay $<?= number_format($bill['total_amount'],2) ?>
+        Pay ₹<?= number_format($bill['total_amount'],2) ?>
       </button>
     </form>
     <?php endif; ?>
   </main>
 
-  <script>lucide.createIcons();</script>
+  <script>
+    lucide.createIcons();
+    function toggleMethod(val) {
+      document.getElementById('card-fields').classList.toggle('hidden', val!=='card');
+    }
+  </script>
 </body>
 </html>

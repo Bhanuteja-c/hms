@@ -1,44 +1,190 @@
-# Healsync — Hospital Management System (PHP + MySQL)
+# Healsync - Hospital Management System 🏥
 
-## Overview
-Healsync is a demo Hospital Management System built with PHP (PDO), MySQL, Tailwind CSS, and minimal JavaScript. It demonstrates patient booking, doctor approvals, prescriptions, treatments, billing, and admin management.
+Healsync is a comprehensive **role-based hospital management system** built using **PHP, MySQL, and TailwindCSS**.  
+It provides secure authentication, billing, treatments, prescriptions, and receipt generation for hospitals and clinics.
 
-## Prerequisites
-- XAMPP (Apache + PHP + MySQL) — tested on PHP 8.x
-- Composer (optional, if you add libraries)
-- Browser
+---
 
-## Installation / Local Setup (XAMPP)
-1. Copy the `healsync` folder into `htdocs` (e.g., `C:\xampp\htdocs\healsync`).
-2. Start Apache and MySQL via XAMPP Control Panel.
-3. Visit `http://localhost/healsync/setup.php` in your browser. This will:
-   - Create the `healsync` DB and tables.
-   - Seed an admin (admin@hms.com / admin123), doctors (doctor123), and patients (patient123).
-4. After setup succeeds, **delete `setup.php`** for security.
-5. Login:
-   - Admin: `admin@hms.com` / `admin123`
-   - Doctor: e.g., `alice@hms.com` / `doctor123`
-   - Patient: `john@hms.com` / `patient123`
+## 🚀 Features
 
-## File structure
-(see full file tree in the project root README or in the ZIP layout above)
+### 👤 Patient Portal
+- **Appointment Management**: Book and manage appointments with doctors
+- **Treatment History**: View and download treatment records (PDF)
+- **Prescription Access**: View prescriptions and download PDF copies
+- **Billing & Payments**: Manage bills and receipts (online/offline payments)
+- **Notifications**: Real-time notifications for prescriptions, treatments, and payments
 
-## Notes on Security & Best Practices
-- Passwords are hashed via `password_hash()`; always keep PHP up to date.
-- All DB queries use prepared statements via PDO to prevent SQL injection.
-- CSRF tokens implemented via `$_SESSION['csrf_token']` — validate tokens on POST.
-- Session cookie flags set for `httponly` and `samesite`.
-- For production: use HTTPS, secure cookie flags (`secure`), input validation, and rate-limiting.
-- Remove `setup.php` after running.
+### 👨‍⚕️ Doctor Portal
+- **Appointment Management**: View approved/pending appointments
+- **Treatment Records**: Add treatments with automatic billing
+- **Prescription Management**: Add prescriptions with multiple medicines
+- **Patient History**: Comprehensive view of patient records
+- **PDF Generation**: Download treatment and prescription records
 
-## Extending the project
-- Add email sending for registration and forgot password (PHPMailer recommended).
-- Use a JS calendar library (FullCalendar) for doctor calendar views.
-- Integrate a real payment gateway (Stripe/PayPal) for live payments.
-- Add unit and integration tests (PHPUnit).
+### 🏥 Reception Portal
+- **Offline Payment Processing**: Manage cash/offline payments
+- **Bill Management**: View and process patient bills
+- **Receipt Generation**: Generate payment receipts (PDF)
+- **Payment Confirmation**: Mark payments as received
 
-## Troubleshooting
-- DB connection errors: update DB constants in `includes/config.php`.
-- If Tailwind CDN is blocked, you can download Tailwind or use a local build.
+### 👨‍💼 Admin Portal
+- **User Management**: Manage doctors, patients, and reception staff
+- **System Analytics**: Overview of system usage and statistics
+- **Audit Logs**: Track all system activities for accountability
+- **Role Management**: Control access permissions
 
-Enjoy! — Healsync
+---
+
+## 🛠️ Tech Stack
+
+- **Backend**: PHP 8+, MySQL, PDO
+- **Frontend**: TailwindCSS, Lucide Icons, Vanilla JavaScript
+- **Security**: CSRF Protection, Password Hashing, Session Management
+- **PDF**: FPDF library for document generation
+
+---
+
+## ⚙️ Installation
+
+1. **Clone Repository**
+   ```bash
+   git clone <repository-url>
+   cd healsync
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   composer install
+   ```
+
+3. **Database Setup**
+   ```bash
+   mysql -u root -p
+   CREATE DATABASE healsync CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   mysql -u root -p healsync < sql/schema.sql
+   ```
+
+4. **Configure Database**
+   Update `includes/db.php` with your credentials
+
+5. **Access System**
+   ```
+   http://localhost/healsync
+   ```
+
+---
+
+## 🔒 Security Features
+
+- **Multi-role System**: Admin, Doctor, Patient, Receptionist
+- **Session Management**: Secure session handling with timeout
+- **Password Security**: Bcrypt hashing with salt
+- **CSRF Protection**: All forms protected against CSRF attacks
+- **SQL Injection Prevention**: PDO prepared statements
+- **XSS Protection**: Input sanitization and output escaping
+- **Audit Logging**: Comprehensive activity tracking
+
+---
+
+## 📄 PDF Generation
+
+- **Treatment Records** - Individual treatment details
+- **Treatment History** - Complete treatment timeline
+- **Prescription Copies** - Medicine prescriptions
+- **Payment Receipts** - Payment confirmations
+
+---
+
+## 🎨 UI/UX Features
+
+- **TailwindCSS**: Utility-first styling
+- **Responsive Layout**: Mobile-first design
+- **Intuitive Navigation**: Role-based menus
+- **Real-time Updates**: Live notifications
+- **Form Validation**: Client and server-side validation
+- **Interactive Elements**: Modals, tooltips, progress indicators
+
+---
+
+## 📊 System Capabilities
+
+- **Appointment Management**: Online booking and scheduling
+- **Medical Records**: Treatment tracking and prescription management
+- **Billing & Payments**: Automatic billing with multiple payment methods
+- **Reporting & Analytics**: Dashboard analytics and audit reports
+
+---
+
+## 🚀 Deployment
+
+### Production Checklist
+- [ ] Update database credentials
+- [ ] Configure email settings
+- [ ] Set up SSL certificate
+- [ ] Enable error logging
+- [ ] Configure backup system
+- [ ] Update default passwords
+- [ ] Test all user roles
+- [ ] Verify PDF generation
+- [ ] Check mobile responsiveness
+
+---
+
+## 🐛 Troubleshooting
+
+**Database Connection Error**
+```bash
+sudo systemctl status mysql
+# Verify credentials in includes/db.php
+```
+
+**PDF Generation Issues**
+```bash
+composer show setasign/fpdf
+chmod 755 vendor/fpdf/
+```
+
+**Session Problems**
+```bash
+ls -la /tmp/
+# Clear browser cookies and cache
+```
+
+---
+
+## 📈 Future Enhancements
+
+- [ ] **Telemedicine Integration**: Video consultations
+- [ ] **Mobile App**: Native iOS/Android apps
+- [ ] **Advanced Analytics**: Business intelligence
+- [ ] **API Development**: RESTful API for integrations
+- [ ] **Multi-language Support**: Internationalization
+- [ ] **Inventory Management**: Medicine and equipment tracking
+
+---
+
+## 🤝 Contributing
+
+1. **Code Style**: Follow PSR-12 standards
+2. **Documentation**: Comment all functions
+3. **Testing**: Test all user roles
+4. **Security**: Validate all inputs
+5. **Performance**: Optimize database queries
+
+---
+
+## 📞 Support
+
+- **GitHub Issues**: Bug reports and feature requests
+- **Discussions**: Community support forum
+- **Email Support**: Direct technical support
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+**💡 Maintained by the Healsync Development Team**
