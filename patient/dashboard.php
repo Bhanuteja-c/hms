@@ -66,7 +66,7 @@ $unpaid = $bills->fetchColumn() ?: 0;
         </div>
         <div>
           <p class="text-gray-500 text-sm">Unpaid Bills</p>
-          <p class="text-2xl font-bold">$<?= number_format($unpaid, 2) ?></p>
+          <p class="text-2xl font-bold">₹<?= number_format($unpaid, 2) ?></p>
         </div>
       </div>
     </div>

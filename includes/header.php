@@ -5,17 +5,22 @@ require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/db.php'; // header needs DB for notifications
 
+// UI helpers for header
+$userName = current_user_name();
+$parts = preg_split('/\s+/', trim($userName));
+$initials = strtoupper(substr($parts[0] ?? 'U', 0, 1) . substr($parts[1] ?? '', 0, 1));
+
 // Build notification endpoints for JS
 $BASE_API_NOTIFS = rtrim(BASE_URL, '/') . '/api/notifications_fetch.php';
 $BASE_API_MARK    = rtrim(BASE_URL, '/') . '/api/mark_notification_read.php';
 $BASE_API_MARK_ALL= rtrim(BASE_URL, '/') . '/api/mark_all_read.php';
 ?>
-<header class="bg-white shadow fixed top-0 left-0 right-0 md:left-64 z-40">
+<header class="fixed top-0 left-0 right-0 md:left-64 z-40 bg-white/80 backdrop-blur border-b border-gray-200">
   <div class="max-w-full mx-auto px-4 py-3 flex items-center justify-between">
     <div class="flex items-center gap-3">
       <a href="<?= e(BASE_URL . '/index.php') ?>" class="flex items-center gap-3">
         <img src="<?= e(BASE_URL . '/assets/img/logo.png') ?>" class="h-8 w-8 rounded" alt="Healsync logo" />
-        <span class="font-semibold text-indigo-600">Healsync</span>
+        <span class="font-semibold text-gray-900">Healsync</span>
       </a>
     </div>
 
@@ -23,7 +28,7 @@ $BASE_API_MARK_ALL= rtrim(BASE_URL, '/') . '/api/mark_all_read.php';
       <?php if (is_logged_in()): ?>
       <div id="notifWrapper" style="overflow:visible; position:relative;">
         <button id="notifBtn" aria-haspopup="true" aria-expanded="false"
-                class="p-2 rounded hover:bg-gray-100 focus:outline-none relative" title="Notifications">
+                class="p-2 rounded-lg hover:bg-gray-100 focus:outline-none relative transition-colors" title="Notifications">
           <i data-lucide="bell" class="w-6 h-6 text-gray-700"></i>
           <span id="notifCount" class="absolute -top-1 -right-0.5 hidden bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">0</span>
         </button>
@@ -44,14 +49,19 @@ $BASE_API_MARK_ALL= rtrim(BASE_URL, '/') . '/api/mark_all_read.php';
       </div>
       <?php endif; ?>
 
-      <nav class="flex items-center gap-4">
+      <nav class="flex items-center gap-3">
         <?php if (is_logged_in()): ?>
-          <a href="<?= e(BASE_URL . (current_user_role()==='doctor' ? '/doctor/dashboard.php' : (current_user_role()==='admin' ? '/admin/dashboard.php' : '/patient/dashboard.php'))) ?>" class="text-sm">Dashboard</a>
-          <span class="text-sm text-gray-600"><?= e(current_user_name()) ?></span>
-          <a href="<?= e(BASE_URL . '/auth/logout.php') ?>" class="px-3 py-1 bg-red-100 text-red-700 rounded text-sm">Logout</a>
+          <a href="<?= e(BASE_URL . (current_user_role()==='doctor' ? '/doctor/dashboard.php' : (current_user_role()==='admin' ? '/admin/dashboard.php' : '/patient/dashboard.php'))) ?>" class="text-sm text-gray-700 hover:text-indigo-600 transition-colors">Dashboard</a>
+          <div class="flex items-center gap-2 pl-2">
+            <div class="h-8 w-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-semibold">
+              <?= e($initials) ?>
+            </div>
+            <span class="text-sm text-gray-700 font-medium hidden sm:inline"><?= e($userName) ?></span>
+          </div>
+          <a href="<?= e(BASE_URL . '/auth/logout.php') ?>" class="px-3 py-1.5 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 transition-colors">Logout</a>
         <?php else: ?>
-          <a href="<?= e(BASE_URL . '/auth/login.php') ?>" class="text-sm">Login</a>
-          <a href="<?= e(BASE_URL . '/auth/register_patient.php') ?>" class="text-sm">Register</a>
+          <a href="<?= e(BASE_URL . '/auth/login.php') ?>" class="text-sm px-3 py-1.5 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">Login</a>
+          <a href="<?= e(BASE_URL . '/auth/register_patient.php') ?>" class="text-sm px-3 py-1.5 rounded-md bg-gray-900 text-white hover:bg-gray-800 transition-colors">Register</a>
         <?php endif; ?>
       </nav>
     </div>

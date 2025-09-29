@@ -1,20 +1,26 @@
 <?php
 // includes/pdf_helpers.php
 require_once __DIR__ . '/../vendor/fpdf/fpdf.php';
+require_once __DIR__ . '/functions.php';
 
-/**
- * Format date safely
- */
-function safe_date(?string $dt, string $format = 'd M Y H:i'): string {
-    if (empty($dt)) return '-';
-    return date($format, strtotime($dt));
+// Reuse global helpers when available to avoid redeclaration
+if (!function_exists('safe_date')) {
+    /**
+     * Format date safely
+     */
+    function safe_date(?string $dt, string $format = 'd M Y H:i'): string {
+        if (empty($dt)) return '-';
+        return date($format, strtotime($dt));
+    }
 }
 
-/**
- * Format money in INR
- */
-function money($amount): string {
-    return '₹' . number_format((float)$amount, 2);
+if (!function_exists('money')) {
+    /**
+     * Format money in INR
+     */
+    function money($amount): string {
+        return '₹' . number_format((float)$amount, 2);
+    }
 }
 
 /**
