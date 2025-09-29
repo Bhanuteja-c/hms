@@ -1,6 +1,14 @@
 <?php
 // index.php
 require_once 'includes/config.php';
+require_once 'includes/functions.php';
+require_once 'includes/db.php';
+
+// Realtime metrics
+$appointmentsThisWeek = $pdo->query("SELECT COUNT(*) FROM appointments WHERE YEARWEEK(date_time, 1) = YEARWEEK(CURDATE(), 1)")->fetchColumn();
+$totalPatients = $pdo->query("SELECT COUNT(*) FROM users WHERE role='patient'")->fetchColumn();
+$totalUsers = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+$revenueThisMonth = $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM bills WHERE status='paid' AND paid_at IS NOT NULL AND paid_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND paid_at < DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')")->fetchColumn();
 ?>
 <!doctype html>
 <html lang="en">
@@ -187,7 +195,7 @@ require_once 'includes/config.php';
               <i data-lucide="calendar-check" class="w-5 h-5 text-green-600"></i>
             </div>
             <div>
-              <p class="font-semibold text-gray-800">120+ Appointments</p>
+              <p class="font-semibold text-gray-800"><?= number_format((int)$appointmentsThisWeek) ?> Appointments</p>
               <p class="text-sm text-gray-500">This week</p>
             </div>
           </div>
@@ -199,8 +207,8 @@ require_once 'includes/config.php';
               <i data-lucide="users" class="w-5 h-5 text-blue-600"></i>
             </div>
             <div>
-              <p class="font-semibold text-gray-800">2,500+ Patients</p>
-              <p class="text-sm text-gray-500">Active users</p>
+              <p class="font-semibold text-gray-800"><?= number_format((int)$totalPatients) ?> Patients</p>
+              <p class="text-sm text-gray-500">Registered</p>
             </div>
           </div>
         </div>
@@ -211,7 +219,7 @@ require_once 'includes/config.php';
               <i data-lucide="credit-card" class="w-5 h-5 text-purple-600"></i>
             </div>
             <div>
-              <p class="font-semibold text-gray-800">₹45K+ Revenue</p>
+              <p class="font-semibold text-gray-800"><?= money($revenueThisMonth) ?> Revenue</p>
               <p class="text-sm text-gray-500">This month</p>
             </div>
           </div>
@@ -565,16 +573,16 @@ require_once 'includes/config.php';
         <!-- Trust Indicators -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
           <div class="text-center">
-            <div class="text-3xl font-bold text-white mb-2">500+</div>
-            <div class="text-white/60">Healthcare Providers</div>
+            <div class="text-3xl font-bold text-white mb-2"><?= number_format((int)$totalUsers) ?></div>
+            <div class="text-white/60">Total Users</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-white mb-2">50K+</div>
+            <div class="text-3xl font-bold text-white mb-2"><?= number_format((int)$totalPatients) ?></div>
             <div class="text-white/60">Patients Served</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-white mb-2">99.9%</div>
-            <div class="text-white/60">Uptime Guarantee</div>
+            <div class="text-3xl font-bold text-white mb-2"><?= number_format((int)$appointmentsThisWeek) ?></div>
+            <div class="text-white/60">Appointments This Week</div>
           </div>
         </div>
       </div>
