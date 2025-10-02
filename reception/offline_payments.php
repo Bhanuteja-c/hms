@@ -8,10 +8,11 @@ require_once __DIR__ . '/../includes/functions.php';
 // Fetch unpaid bills for offline payment processing
 $stmt = $pdo->query("
   SELECT b.*, u.name AS patient_name, u.email AS patient_email, u.phone AS patient_phone,
-         d.name AS doctor_name, d.specialty AS doctor_specialty
+         d.name AS doctor_name, COALESCE(doc.specialty, '') AS doctor_specialty
   FROM bills b
   JOIN users u ON b.patient_id = u.id
   JOIN users d ON b.doctor_id = d.id
+  LEFT JOIN doctors doc ON d.id = doc.id
   WHERE b.status = 'unpaid'
   ORDER BY b.created_at ASC
 ");
@@ -22,31 +23,43 @@ $totalUnpaid = array_sum(array_column($bills, 'total_amount'));
 $billCount = count($bills);
 ?>
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Offline Payments - Reception</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+  </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
   <?php include __DIR__ . '/../includes/sidebar_reception.php'; ?>
   <?php include __DIR__ . '/../includes/header.php'; ?>
 
-  <main class="pt-20 p-6 md:ml-64">
-    <div class="max-w-7xl mx-auto">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold flex items-center gap-2">
-          <i data-lucide="wallet" class="w-6 h-6 text-indigo-600"></i>
-          Offline Payment Processing
-        </h2>
-        <div class="flex items-center gap-4">
-          <a href="offline_bills.php" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+  <main class="pt-20 p-6 md:ml-64 transition-all duration-300">
+    <!-- Header Section -->
+    <div class="mb-8">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            Offline Payment Processing
+          </h1>
+          <p class="text-gray-600 mt-1">Process cash payments for unpaid bills</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="offline_bills.php" class="inline-flex items-center gap-2 px-4 py-2.5 glass-effect text-gray-700 rounded-xl font-medium hover:bg-white/50 transition-all duration-300">
             <i data-lucide="file-text" class="w-4 h-4"></i>
-            View All Bills
+            All Bills
           </a>
         </div>
       </div>
+    </div>
 
       <!-- Stats Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

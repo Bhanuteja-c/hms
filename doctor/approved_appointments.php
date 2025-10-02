@@ -49,22 +49,53 @@ $stmt->execute([':did' => $did]);
 $apps = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Approved Appointments - Doctor</title>
+  <title>Approved Appointments - Healsync</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .appointment-card {
+      transition: all 0.3s ease;
+    }
+    .appointment-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
   <?php include __DIR__ . '/../includes/sidebar_doctor.php'; ?>
   <?php include __DIR__ . '/../includes/header.php'; ?>
 
-  <main class="pt-20 p-6 md:ml-64 max-w-5xl mx-auto">
-    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-      <i data-lucide="calendar-check" class="w-6 h-6 text-green-600"></i>
-      Approved Appointments
-    </h2>
+  <main class="pt-20 p-6 md:ml-64 transition-all duration-300">
+    <!-- Header Section -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            Approved Appointments
+          </h1>
+          <p class="text-gray-600 mt-1">Manage your scheduled patient appointments</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <p class="text-2xl font-bold text-green-600"><?= count($apps) ?></p>
+            <p class="text-gray-600 text-sm">Scheduled</p>
+          </div>
+          <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+            <i data-lucide="calendar-check" class="w-6 h-6 text-white"></i>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <?php if (!$apps): ?>
       <div class="bg-yellow-100 text-yellow-800 p-4 rounded">No approved appointments yet.</div>

@@ -74,13 +74,22 @@ function isActive($file) {
       </a>
     </div>
 
-    <!-- Profile -->
+    <!-- Account -->
     <div class="mt-6">
-      <p class="text-gray-500 text-xs uppercase font-semibold mb-3 px-3 tracking-wider">Profile</p>
+      <p class="text-gray-500 text-xs uppercase font-semibold mb-3 px-3 tracking-wider">Account</p>
+      
+      <!-- Notifications -->
+      <a href="<?= $baseUrl ?>notifications.php"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?= isActive('notifications.php') ?>">
+        <i data-lucide="bell" class="w-5 h-5"></i>
+        <span>Notifications</span>
+      </a>
+      
+      <!-- Profile -->
       <a href="<?= $baseUrl ?>profile.php"
          class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?= isActive('profile.php') ?>">
         <i data-lucide="user" class="w-5 h-5"></i>
-        <span>Profile</span>
+        <span>My Profile</span>
       </a>
     </div>
 

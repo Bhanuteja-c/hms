@@ -100,13 +100,13 @@ $notes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Mark all as read
     function markAllRead() {
-      fetch('/healsync/api/mark_all_read.php', { method: 'POST' })
+      fetch('<?= e(BASE_URL . '/api/mark_all_read.php') ?>', { method: 'POST' })
         .then(() => location.reload());
     }
 
     // Mark a single notification as read
     function markRead(id) {
-      fetch('/healsync/api/mark_notification_read.php', {
+      fetch('<?= e(BASE_URL . '/api/mark_notification_read.php') ?>', {
         method: 'POST',
         headers: {'Content-Type':'application/x-www-form-urlencoded'},
         body: 'id=' + id

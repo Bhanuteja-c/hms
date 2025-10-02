@@ -32,12 +32,27 @@ $stmt->execute($params);
 $prescriptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>View Prescriptions - Healsync</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .prescription-card {
+      transition: all 0.3s ease;
+    }
+    .prescription-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body class="bg-gray-100">
   <?php include __DIR__ . '/../includes/sidebar_doctor.php'; ?>

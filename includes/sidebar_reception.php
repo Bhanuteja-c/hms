@@ -19,10 +19,32 @@ $baseUrl = BASE_URL . '/reception/';
       <span>Dashboard</span>
     </a>
 
+    <a href="<?= e($baseUrl . 'appointments.php') ?>" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?= $currentPage==='appointments.php' ? 'bg-indigo-50 text-indigo-700 font-medium border-l-4 border-indigo-500' : 'hover:bg-gray-50 text-gray-700' ?>">
+      <i data-lucide="calendar" class="w-5 h-5"></i>
+      <span>Appointments</span>
+    </a>
+
+    <a href="<?= e($baseUrl . 'walkin_appointment.php') ?>" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?= $currentPage==='walkin_appointment.php' ? 'bg-indigo-50 text-indigo-700 font-medium border-l-4 border-indigo-500' : 'hover:bg-gray-50 text-gray-700' ?>">
+      <i data-lucide="user-plus" class="w-5 h-5"></i>
+      <span>Walk-in</span>
+    </a>
+
+    <div class="pt-2 pb-1">
+      <div class="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">Billing</div>
+    </div>
+
     <a href="<?= e($baseUrl . 'offline_bills.php') ?>" 
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?= $currentPage==='offline_bills.php' ? 'bg-indigo-50 text-indigo-700 font-medium border-l-4 border-indigo-500' : 'hover:bg-gray-50 text-gray-700' ?>">
       <i data-lucide="credit-card" class="w-5 h-5"></i>
       <span>Offline Bills</span>
+    </a>
+
+    <a href="<?= e($baseUrl . 'offline_payments.php') ?>" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?= $currentPage==='offline_payments.php' ? 'bg-indigo-50 text-indigo-700 font-medium border-l-4 border-indigo-500' : 'hover:bg-gray-50 text-gray-700' ?>">
+      <i data-lucide="banknote" class="w-5 h-5"></i>
+      <span>Payments</span>
     </a>
 
     <a href="<?= e($baseUrl . 'receipt_pdf.php') ?>" 
@@ -31,10 +53,22 @@ $baseUrl = BASE_URL . '/reception/';
       <span>Receipts</span>
     </a>
 
-    <a href="<?= e($baseUrl . 'appointments.php') ?>" 
-       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?= $currentPage==='appointments.php' ? 'bg-indigo-50 text-indigo-700 font-medium border-l-4 border-indigo-500' : 'hover:bg-gray-50 text-gray-700' ?>">
-      <i data-lucide="calendar" class="w-5 h-5"></i>
-      <span>Appointments</span>
+    <div class="pt-2 pb-1 mt-4">
+      <div class="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">Account</div>
+    </div>
+
+    <!-- Notifications -->
+    <a href="<?= e($baseUrl . 'notifications.php') ?>" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?= $currentPage==='notifications.php' ? 'bg-indigo-50 text-indigo-700 font-medium border-l-4 border-indigo-500' : 'hover:bg-gray-50 text-gray-700' ?>">
+      <i data-lucide="bell" class="w-5 h-5"></i>
+      <span>Notifications</span>
+    </a>
+
+    <!-- Profile -->
+    <a href="<?= e($baseUrl . 'profile.php') ?>" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?= $currentPage==='profile.php' ? 'bg-indigo-50 text-indigo-700 font-medium border-l-4 border-indigo-500' : 'hover:bg-gray-50 text-gray-700' ?>">
+      <i data-lucide="user" class="w-5 h-5"></i>
+      <span>My Profile</span>
     </a>
   </nav>
 

@@ -1,16 +1,16 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
-require_role('patient');
+require_role('receptionist');
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 
-$pid = current_user_id();
+$rid = current_user_id();
 $errors = [];
 $success = null;
 
 // Fetch user details
 $stmt = $pdo->prepare("SELECT id, name, email, phone, address, dob, gender FROM users WHERE id = :id LIMIT 1");
-$stmt->execute([':id' => $pid]);
+$stmt->execute([':id' => $rid]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$user) {
@@ -40,7 +40,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_profile') {
                 ':dob' => $dob,
                 ':gender' => $gender,
                 ':address' => $address,
-                ':id' => $pid
+                ':id' => $rid
             ]);
 
             $success = "Profile updated successfully!";
@@ -65,7 +65,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
         } else {
             // Fetch current hash
             $stmt = $pdo->prepare("SELECT password FROM users WHERE id=:id");
-            $stmt->execute([':id' => $pid]);
+            $stmt->execute([':id' => $rid]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$row || !password_verify($old_pw, $row['password'])) {
@@ -73,7 +73,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
             } else {
                 $hash = password_hash($new_pw, PASSWORD_DEFAULT);
                 $pdo->prepare("UPDATE users SET password=:pw WHERE id=:id")
-                    ->execute([':pw' => $hash, ':id' => $pid]);
+                    ->execute([':pw' => $hash, ':id' => $rid]);
 
                 $success = "Password changed successfully!";
             }
@@ -85,7 +85,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>My Profile - Healsync</title>
+  <title>My Profile - Reception</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -101,7 +101,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
   </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
-  <?php include __DIR__ . '/../includes/sidebar_patient.php'; ?>
+  <?php include __DIR__ . '/../includes/sidebar_reception.php'; ?>
   <?php include __DIR__ . '/../includes/header.php'; ?>
 
   <main class="pt-20 p-6 md:ml-64 transition-all duration-300">
@@ -112,7 +112,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
           <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
             My Profile
           </h1>
-          <p class="text-gray-600 mt-1">Manage your personal information and account settings</p>
+          <p class="text-gray-600 mt-1">Manage your reception account settings</p>
         </div>
         <div class="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center">
           <i data-lucide="user" class="w-6 h-6 text-white"></i>
@@ -121,20 +121,27 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
     </div>
 
     <?php if ($errors): ?>
-      <div class="bg-red-50 border border-red-200 text-red-700 p-3 rounded mb-3">
+      <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6">
+        <div class="flex items-center gap-2 mb-2">
+          <i data-lucide="alert-circle" class="w-5 h-5"></i>
+          <span class="font-medium">Error</span>
+        </div>
         <?=implode('<br>', array_map('htmlspecialchars', $errors))?>
       </div>
     <?php endif; ?>
     <?php if ($success): ?>
-      <div class="bg-green-50 border border-green-200 text-green-700 p-3 rounded mb-3">
-        <?=htmlspecialchars($success)?>
+      <div class="bg-green-50 border border-green-200 text-green-700 p-4 rounded-xl mb-6">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check-circle" class="w-5 h-5"></i>
+          <span><?=htmlspecialchars($success)?></span>
+        </div>
       </div>
     <?php endif; ?>
 
     <!-- Profile Update -->
     <div class="glass-effect rounded-2xl premium-shadow p-8 mb-8">
       <div class="flex items-center gap-3 mb-6">
-        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+        <div class="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center">
           <i data-lucide="edit-3" class="w-5 h-5 text-white"></i>
         </div>
         <div>
@@ -155,7 +162,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
             <input type="text" 
                    name="name" 
                    value="<?=e($user['name'])?>" 
-                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
                    required>
           </div>
           
@@ -178,7 +185,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
             <input type="tel" 
                    name="phone" 
                    value="<?=e($user['phone'])?>" 
-                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
                    required>
           </div>
           
@@ -190,7 +197,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
             <input type="date" 
                    name="dob" 
                    value="<?=e($user['dob'])?>" 
-                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
                    required>
           </div>
           
@@ -200,7 +207,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
               Gender
             </label>
             <select name="gender" 
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
                     required>
               <option value="male" <?=($user['gender']==='male'?'selected':'')?>>Male</option>
               <option value="female" <?=($user['gender']==='female'?'selected':'')?>>Female</option>
@@ -216,14 +223,14 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
           </label>
           <textarea name="address" 
                     rows="3"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
                     placeholder="Enter your full address..."
                     required><?=e($user['address'])?></textarea>
         </div>
         
         <div class="pt-4">
           <button type="submit"
-                  class="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:from-indigo-700 hover:to-blue-700 transform hover:scale-[1.02] transition-all duration-200 premium-shadow">
+                  class="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:from-teal-700 hover:to-cyan-700 transform hover:scale-[1.02] transition-all duration-200 premium-shadow">
             <i data-lucide="save" class="w-5 h-5"></i>
             Save Changes
           </button>

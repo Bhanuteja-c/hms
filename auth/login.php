@@ -30,6 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header("Location: /healsync/admin/dashboard.php");
                 } elseif ($user['role'] === 'doctor') {
                     header("Location: /healsync/doctor/dashboard.php");
+                } elseif ($user['role'] === 'receptionist') {
+                    header("Location: /healsync/reception/dashboard.php");
                 } else {
                     header("Location: /healsync/patient/dashboard.php");
                 }

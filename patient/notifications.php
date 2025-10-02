@@ -84,12 +84,12 @@ $notes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     lucide.createIcons();
 
     function markAllRead() {
-      fetch('/healsync/api/mark_all_read.php', { method: 'POST' })
+      fetch('<?= e(BASE_URL . '/api/mark_all_read.php') ?>', { method: 'POST' })
         .then(() => location.reload());
     }
 
     function markRead(id) {
-      fetch('/healsync/api/mark_notification_read.php', {
+      fetch('<?= e(BASE_URL . '/api/mark_notification_read.php') ?>', {
         method: 'POST',
         headers: {'Content-Type':'application/x-www-form-urlencoded'},
         body: 'id='+id

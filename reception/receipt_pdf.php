@@ -22,7 +22,16 @@ $stmt->execute([':id' => $id]);
 $bill = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$bill) {
-    die("❌ Receipt not available (bill unpaid or not found).");
+    // Check if bill exists but is unpaid
+    $stmt = $pdo->prepare("SELECT status FROM bills WHERE id = :id");
+    $stmt->execute([':id' => $id]);
+    $billStatus = $stmt->fetchColumn();
+    
+    if ($billStatus) {
+        die("❌ Receipt not available. Bill #$id is currently '$billStatus'. Only paid bills can generate receipts.");
+    } else {
+        die("❌ Receipt not available. Bill #$id not found.");
+    }
 }
 
 // Fetch last payment

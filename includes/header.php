@@ -17,11 +17,27 @@ $BASE_API_MARK_ALL= rtrim(BASE_URL, '/') . '/api/mark_all_read.php';
 ?>
 <header class="fixed top-0 left-0 right-0 md:left-64 z-40 bg-white/80 backdrop-blur border-b border-gray-200">
   <div class="max-w-full mx-auto px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-3">
+    <!-- Logo - Only show on mobile when sidebar is hidden -->
+    <div class="flex items-center gap-3 md:hidden">
       <a href="<?= e(BASE_URL . '/index.php') ?>" class="flex items-center gap-3">
         <img src="<?= e(BASE_URL . '/assets/img/logo.png') ?>" class="h-8 w-8 rounded" alt="Healsync logo" />
         <span class="font-semibold text-gray-900">Healsync</span>
       </a>
+    </div>
+    
+    <!-- Page Title for Desktop -->
+    <div class="hidden md:flex items-center">
+      <h1 class="text-lg font-semibold text-gray-800">
+        <?php
+        $currentPage = basename($_SERVER['PHP_SELF'], '.php');
+        $pageTitle = ucfirst(str_replace('_', ' ', $currentPage));
+        if ($pageTitle === 'Dashboard') echo 'Dashboard';
+        elseif ($pageTitle === 'Book appointment') echo 'Book Appointment';
+        elseif ($pageTitle === 'Profile') echo 'My Profile';
+        elseif ($pageTitle === 'Notifications') echo 'Notifications';
+        else echo $pageTitle;
+        ?>
+      </h1>
     </div>
 
     <div class="flex items-center gap-4 relative">
@@ -43,7 +59,13 @@ $BASE_API_MARK_ALL= rtrim(BASE_URL, '/') . '/api/mark_all_read.php';
             <div class="p-4 text-sm text-gray-500">Loading…</div>
           </div>
           <div class="p-3 border-t text-center text-sm">
-            <a id="openAllPage" href="<?= e(current_user_role() === 'doctor' ? BASE_URL . '/doctor/notifications.php' : BASE_URL . '/patient/notifications.php') ?>" class="text-indigo-600 hover:underline">Open notifications page</a>
+            <a id="openAllPage" href="<?php 
+              $role = current_user_role();
+              if ($role === 'doctor') echo e(BASE_URL . '/doctor/notifications.php');
+              elseif ($role === 'admin') echo e(BASE_URL . '/admin/notifications.php');
+              elseif ($role === 'receptionist') echo e(BASE_URL . '/reception/notifications.php');
+              else echo e(BASE_URL . '/patient/notifications.php');
+            ?>" class="text-indigo-600 hover:underline">Open notifications page</a>
           </div>
         </div>
       </div>

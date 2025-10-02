@@ -5,12 +5,14 @@
 USE healsync;
 
 
-UPDATE users SET password = '$2y$10$HuRYq6wAcJc6sUuWZZnBmeOAsFmahcu2SeFatRZNTlLWBeUR.2eqO' WHERE email = 'admin@healsync.com';
-UPDATE users SET password = '$2y$10$foHr9uiZs5KfZOg.m1.y7.Kkbpl/MJ69I92B4Om7D0mtoTcnQXOr6' WHERE email = 'sabari@healsync.com';
-UPDATE users SET password = '$2y$10$PaROvApQaQv9JJX/nlFeAO9BRmo5vVF2ngNzQmkVhOHnD/8zvUd36' WHERE email = 'harith@healsync.com';
-UPDATE users SET password = '$2y$10$zZ40UaBhqbDNbr59B9wrYeguvW9gJFJSm4qdF/I.6VfLmlapBMK5O' WHERE email = 'sowmiya@healsync.com';
-UPDATE users SET password = '$2y$10$Mv4X9rMIy6glEzPStLabluI27w9ijK8NjgtQI5q.udjqxWKRP07b6' WHERE email = 'bhanuteja@healsync.com';
-UPDATE users SET password = '$2y$10$ZSPcbPnYX0v6gNv27Jdk5.gbJ04PGk..GkhRGZMrXYRKbJZC60sJC' WHERE email = 'rahul@healsync.com';
+INSERT INTO users (role, name, email, password) VALUES
+('admin',       'Admin',       'admin@healsync.com',   '$2y$10$HuRYq6wAcJc6sUuWZZnBmeOAsFmahcu2SeFatRZNTlLWBeUR.2eqO'),
+('doctor',      'Sabari',      'sabari@healsync.com',  '$2y$10$foHr9uiZs5KfZOg.m1.y7.Kkbpl/MJ69I92B4Om7D0mtoTcnQXOr6'),
+('doctor',      'Harith',      'harith@healsync.com',  '$2y$10$PaROvApQaQv9JJX/nlFeAO9BRmo5vVF2ngNzQmkVhOHnD/8zvUd36'),
+('doctor',      'Sowmiya',     'sowmiya@healsync.com', '$2y$10$zZ40UaBhqbDNbr59B9wrYeguvW9gJFJSm4qdF/I.6VfLmlapBMK5O'),
+('doctor',      'Bhanu Teja',  'bhanuteja@healsync.com','$2y$10$Mv4X9rMIy6glEzPStLabluI27w9ijK8NjgtQI5q.udjqxWKRP07b6'),
+('doctor',      'Rahul',       'rahul@healsync.com',   '$2y$10$ZSPcbPnYX0v6gNv27Jdk5.gbJ04PGk..GkhRGZMrXYRKbJZC60sJC');
+
 
 
 Admin → admin@healsync.com / admin123
