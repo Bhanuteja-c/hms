@@ -16,7 +16,7 @@ if (isset($_GET['query'])) {
         $stmt = $pdo->prepare("SELECT id, name, email, phone, dob, gender, address 
                                FROM users 
                                WHERE role='patient' AND (name LIKE :q OR email LIKE :q)");
-        $stmt->execute([':q' => "%$query%"]);
+        $stmt->execute(['q' => "%$query%"]);
         $patients = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // If doctor selected a patient_id from dropdown
@@ -27,7 +27,7 @@ if (isset($_GET['query'])) {
             if ($patient) {
                 // Appointments
                 $stmt = $pdo->prepare("SELECT id, date_time, reason, status FROM appointments WHERE patient_id=:pid");
-                $stmt->execute([':pid' => $pid]);
+                $stmt->execute(['pid' => $pid]);
                 foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $a) {
                     $history[] = [
                         'type' => 'appointment',
@@ -42,7 +42,7 @@ if (isset($_GET['query'])) {
                                        FROM prescriptions p 
                                        JOIN appointments a ON p.appointment_id=a.id 
                                        WHERE a.patient_id=:pid");
-                $stmt->execute([':pid' => $pid]);
+                $stmt->execute(['pid' => $pid]);
                 foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $p) {
                     $history[] = [
                         'type' => 'prescription',
@@ -57,7 +57,7 @@ if (isset($_GET['query'])) {
                                        FROM treatments t 
                                        JOIN appointments a ON t.appointment_id=a.id 
                                        WHERE a.patient_id=:pid");
-                $stmt->execute([':pid' => $pid]);
+                $stmt->execute(['pid' => $pid]);
                 foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $t) {
                     $history[] = [
                         'type' => 'treatment',

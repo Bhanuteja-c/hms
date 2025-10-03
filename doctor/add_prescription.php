@@ -15,7 +15,7 @@ $stmt = $pdo->prepare("
     WHERE a.doctor_id = :did AND a.status = 'approved'
     ORDER BY a.date_time DESC
 ");
-$stmt->execute([':did' => $did]);
+$stmt->execute(['did' => $did]);
 $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Handle form submit
@@ -40,27 +40,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($appointment_id && $validEntries > 0) {
             // Verify appointment belongs to doctor
             $stmt = $pdo->prepare("SELECT * FROM appointments WHERE id=:id AND doctor_id=:did AND status='approved'");
-            $stmt->execute([':id'=>$appointment_id, ':did'=>$did]);
+            $stmt->execute(['id'=>$appointment_id, 'did'=>$did]);
             $appt = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($appt) {
                 $pid = $appt['patient_id'];
 
-                // Insert medicines directly into prescriptions table
+                // First create a prescription record
+                $stmt = $pdo->prepare("INSERT INTO prescriptions (appointment_id) VALUES (:aid)");
+                $stmt->execute(['aid' => $appointment_id]);
+                $prescription_id = $pdo->lastInsertId();
+
+                // Then insert medicines into prescription_items table
                 $stmt = $pdo->prepare("
-                    INSERT INTO prescriptions (appointment_id, medicine, dosage, duration, instructions)
-                    VALUES (:aid, :med, :dos, :dur, :ins)
+                    INSERT INTO prescription_items (prescription_id, medicine, dosage, duration, instructions)
+                    VALUES (:pid, :med, :dos, :dur, :ins)
                 ");
 
                 for ($i=0; $i<count($medicines); $i++) {
                     $med = trim($medicines[$i]);
                     if (!$med) continue; // skip empty rows
                     $stmt->execute([
-                        ':aid' => $appointment_id,
-                        ':med' => $med,
-                        ':dos' => trim($dosages[$i] ?? ''),
-                        ':dur' => trim($durations[$i] ?? ''),
-                        ':ins' => trim($instructions[$i] ?? '')
+                        'pid' => $prescription_id,
+                        'med' => $med,
+                        'dos' => trim($dosages[$i] ?? ''),
+                        'dur' => trim($durations[$i] ?? ''),
+                        'ins' => trim($instructions[$i] ?? '')
                     ]);
                 }
 
@@ -69,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         date('d M Y', strtotime($appt['date_time'])) . ".";
                 $link = "/healsync/patient/prescriptions.php";
                 $pdo->prepare("INSERT INTO notifications (user_id,message,link) VALUES (:uid,:msg,:link)")
-                    ->execute([':uid' => $pid, ':msg' => $msg, ':link' => $link]);
+                    ->execute(['uid' => $pid, 'msg' => $msg, 'link' => $link]);
 
                 // Audit log
                 audit_log($pdo, $did, 'add_prescription', json_encode([

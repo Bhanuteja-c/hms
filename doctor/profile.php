@@ -11,12 +11,12 @@ $success = null;
 // Fetch user and doctor details
 $stmt = $pdo->prepare("
     SELECT u.id, u.name, u.email, u.phone, u.address, u.dob, u.gender, 
-           d.specialty, d.license_number, d.experience_years, d.qualification
+           d.specialty
     FROM users u 
     LEFT JOIN doctors d ON u.id = d.id 
     WHERE u.id = :id LIMIT 1
 ");
-$stmt->execute([':id' => $did]);
+$stmt->execute(['id' => $did]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$user) {
@@ -34,9 +34,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_profile') {
         $gender = $_POST['gender'];
         $address = trim($_POST['address']);
         $specialty = trim($_POST['specialty']);
-        $license_number = trim($_POST['license_number']);
-        $experience_years = intval($_POST['experience_years']);
-        $qualification = trim($_POST['qualification']);
 
         if ($name === '' || $phone === '' || $dob === '' || $gender === '' || $address === '' || $specialty === '') {
             $errors[] = "All required fields must be filled.";
@@ -49,28 +46,24 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_profile') {
                 // Update users table
                 $stmt = $pdo->prepare("UPDATE users SET name=:name, phone=:phone, dob=:dob, gender=:gender, address=:address WHERE id=:id");
                 $stmt->execute([
-                    ':name' => $name,
-                    ':phone' => $phone,
-                    ':dob' => $dob,
-                    ':gender' => $gender,
-                    ':address' => $address,
-                    ':id' => $did
+                    'name' => $name,
+                    'phone' => $phone,
+                    'dob' => $dob,
+                    'gender' => $gender,
+                    'address' => $address,
+                    'id' => $did
                 ]);
 
                 // Update or insert doctors table
                 $stmt = $pdo->prepare("
-                    INSERT INTO doctors (id, specialty, license_number, experience_years, qualification) 
-                    VALUES (:id, :specialty, :license_number, :experience_years, :qualification)
+                    INSERT INTO doctors (id, specialty) 
+                    VALUES (:id, :specialty)
                     ON DUPLICATE KEY UPDATE 
-                    specialty=:specialty, license_number=:license_number, 
-                    experience_years=:experience_years, qualification=:qualification
+                    specialty=:specialty
                 ");
                 $stmt->execute([
-                    ':id' => $did,
-                    ':specialty' => $specialty,
-                    ':license_number' => $license_number,
-                    ':experience_years' => $experience_years,
-                    ':qualification' => $qualification
+                    'id' => $did,
+                    'specialty' => $specialty
                 ]);
 
                 $pdo->commit();
@@ -79,12 +72,12 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_profile') {
                 // Refresh user data
                 $stmt = $pdo->prepare("
                     SELECT u.id, u.name, u.email, u.phone, u.address, u.dob, u.gender, 
-                           d.specialty, d.license_number, d.experience_years, d.qualification
+                           d.specialty
                     FROM users u 
                     LEFT JOIN doctors d ON u.id = d.id 
                     WHERE u.id = :id LIMIT 1
                 ");
-                $stmt->execute([':id' => $did]);
+                $stmt->execute(['id' => $did]);
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
                 
             } catch (Exception $e) {
@@ -114,7 +107,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
 
         if (!$errors) {
             $stmt = $pdo->prepare("SELECT password FROM users WHERE id=:id");
-            $stmt->execute([':id' => $did]);
+            $stmt->execute(['id' => $did]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$row || !password_verify($old_pw, $row['password'])) {
@@ -122,7 +115,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
             } else {
                 $hash = password_hash($new_pw, PASSWORD_DEFAULT);
                 $pdo->prepare("UPDATE users SET password=:pw WHERE id=:id")
-                    ->execute([':pw' => $hash, ':id' => $did]);
+                    ->execute(['pw' => $hash, 'id' => $did]);
 
                 $success = "Password changed successfully!";
             }
@@ -259,11 +252,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
                   <option value="other" <?= $user['gender'] === 'other' ? 'selected' : '' ?>>Other</option>
                 </select>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Experience (Years)</label>
-                <input type="number" name="experience_years" value="<?= e($user['experience_years'] ?? '') ?>" min="0" max="50"
-                       class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors">
-              </div>
             </div>
 
             <div>
@@ -280,24 +268,10 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
               Professional Information
             </h4>
             
-            <div class="grid md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Specialty *</label>
-                <input type="text" name="specialty" value="<?= e($user['specialty'] ?? '') ?>" required
-                       placeholder="e.g., Cardiology, Pediatrics"
-                       class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">License Number</label>
-                <input type="text" name="license_number" value="<?= e($user['license_number'] ?? '') ?>"
-                       class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors">
-              </div>
-            </div>
-
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Qualification</label>
-              <input type="text" name="qualification" value="<?= e($user['qualification'] ?? '') ?>"
-                     placeholder="e.g., MBBS, MD, MS"
+              <label class="block text-sm font-medium text-gray-700 mb-2">Specialty *</label>
+              <input type="text" name="specialty" value="<?= e($user['specialty'] ?? '') ?>" required
+                     placeholder="e.g., Cardiology, Pediatrics"
                      class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors">
             </div>
           </div>
